@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tq
+spec:
+  selector:
+    matchLabels:
+      app: tq
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: tq
+    spec:
+      terminationGracePeriodSeconds: 5
+      imagePullSecrets:
+      - name: registry-pull-secret
+      containers:
+      - name: tq
+        image: swr.cn-north-4.myhuaweicloud.com/cotte-internal/tq:0.0.1
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: tq
+        command: ["java","-jar","/opt/microservice.jar","--spring.profiles.active=test"]
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 2500Mi
+          requests:
+            cpu: 100m
+            memory: 500Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tq
+spec:
+  ports:
+  - port: 8080
+    name: tq
+    targetPort: 8080
+  selector:
+    app: tq
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: tq
+spec:
+  gateways:
+    - istio-system/gateway
+  hosts:
+    - test.ciiplat.com
+  http:
+    - match:
+        - uri:
+            prefix: /tq
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: tq
+            port:
+              number: 8080

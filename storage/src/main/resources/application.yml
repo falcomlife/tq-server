@@ -1,0 +1,74 @@
+server:
+  port: 8080
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: mall
+  aop:
+    proxy-target-class: true
+  servlet:
+    multipart:
+      max-request-size: 100MB
+      max-file-size: 100MB
+  profiles:
+    active: dev
+  resources:
+    static-locations: classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/,classpath:/admin/,classpath:/customer/,file:/home/sorawingwind/workhome/test/upload
+  datasource:
+    druid:
+      initialSize: 5
+      minIdle: 5
+      maxActive: 50
+      maxWait: 60000
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 300000
+      validationQuery: SELECT 1 FROM DUAL
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+      poolPreparedStatements: true
+      maxPoolPreparedStatementPerConnectionSize: 20
+      filters: stat,wall
+      connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+      connectionInitSqls: SELECT 1 FROM DUAL
+      useGlobalDataSourceStat: true
+
+ebean:
+  search:
+    packages: com.cotte.estate.bean.pojo.doo
+
+
+haikang:
+  contentType: application/json
+  parkListApi: /artemis/api/resource/v1/park/parkList
+  addCarsApi: /artemis/api/resource/v1/vehicle/batch/add
+  updateCardApi: /artemis/api/resource/v1/vehicle/single/update
+  delCarsApi: /artemis/api/resource/v1/vehicle/batch/delete
+  chargeCarApi: /artemis/api/pms/v1/car/charge
+  deletionChargeApi: /artemis/api/pms/v1/car/charge/deletion
+  alarmCarApi: /artemis/api/pms/v1/alarmCar/addition
+  deletionAlarmApi: /artemis/api/pms/v1/alarmCar/deletion
+  crossRecordsApi: /artemis/api/pms/v1/crossRecords/page
+  imageApi: /artemis/api/pms/v1/image
+  vehicleListApi: /artemis/api/resource/v1/vehicle/advance/vehicleList
+  project_id: 1849220873474c5e819a82fb67948716
+  deviceControlApi: /artemis/api/pms/v1/deviceControl
+  deviceControlBatchApi: /artemis/api/pms/v1/deviceControlBatch
+  entranceListApi: /artemis/api/resource/v1/entrance/entranceList
+  roadwayListApi: /artemis/api/resource/v1/roadway/roadwayList
+  eventSubscriptionByEventTypes: /artemis/api/eventService/v1/eventSubscriptionByEventTypes
+  eventSubscriptionView: /artemis/api/eventService/v1/eventSubscriptionView
+  eventUnSubscriptionByEventTypes: /artemis/api/eventService/v1/eventUnSubscriptionByEventTypes
+logging:
+  level:
+    io:
+      ebean:
+        SQL: DEBUG
+        TXN: DEBUG
+okhttp:
+  connectTimeout: 30
+  readTimeout: 30
+  writeTimeout: 30
+  maxIdleConnections: 200 # 连接池中整体的空闲连接的最大数量
+  keepAliveDuration: 300 # 连接空闲时间最多为 300 秒
