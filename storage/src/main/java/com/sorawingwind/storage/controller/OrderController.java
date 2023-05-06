@@ -50,6 +50,8 @@ public class OrderController {
             BeanUtils.copyProperties(item, aoInner);
             aoInner.setCustomerName(dictController.getById(item.getCustomerName()).getItemName());
             aoInner.setCustomerNameId(item.getCustomerName());
+            aoInner.setColor(dictController.getById(item.getColor()).getItemName());
+            aoInner.setColorId(item.getColor());
             return aoInner;
         }).collect(Collectors.toList());
         return new PageRS<>(pageSize, pageIndex, totleRowCount, totleRowCount / pageSize, listaor);
@@ -59,8 +61,8 @@ public class OrderController {
     public RS save(@RequestBody OrderAo orderAo) {
         OrderDo doo = new OrderDo();
         BeanUtils.copyProperties(orderAo, doo);
-        int count = Ebean.createQuery(OrderDo.class).where().eq("is_delete",0).findCount();
-        doo.setCode(CodeGenerUtil.getCode("O",count));
+        int count = Ebean.createQuery(OrderDo.class).where().eq("is_delete", 0).findCount();
+        doo.setCode(CodeGenerUtil.getCode("OR", count));
         doo.setId(UUIDUtil.simpleUUid());
         doo.setCreateTime(new Date());
         doo.setIsDelete(0);
@@ -73,6 +75,7 @@ public class OrderController {
         OrderDo doo = new OrderDo();
         BeanUtils.copyProperties(orderAo, doo);
         doo.setCustomerName(orderAo.getCustomerNameId());
+        doo.setColor(orderAo.getColorId());
         doo.setModifiedTime(new Date());
         Ebean.update(doo);
         return RS.ok();
@@ -135,5 +138,24 @@ public class OrderController {
             map.put("count", count);
             return map;
         }).collect(Collectors.toList()));
+    }
+
+    @GetMapping("/code")
+    public RS getByCode(@RequestParam(required = false) String code) {
+        List<Map<String,String>> list = Ebean.createQuery(OrderDo.class).where().like("code", "%" + code + "%").eq("is_delete", false).findList().stream().map(item -> {
+            Map<String, String> map = new HashMap<>();
+            map.put("label",item.getCode());
+            map.put("value",item.getId());
+            return map;
+        }).collect(Collectors.toList());
+        return RS.ok(list);
+    }
+
+    @GetMapping("/id")
+    public RS getById(@RequestParam(required = true) String id) {
+        OrderAo ao = new OrderAo();
+        OrderDo doo = Ebean.createQuery(OrderDo.class).where().idEq(id).findOne();
+        BeanUtils.copyProperties(doo,ao);
+        return RS.ok(ao);
     }
 }

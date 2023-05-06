@@ -31,6 +31,8 @@ public class InStorageAo {
 
     private String orderId;
 
+    private String orderCode;
+
     private String code;
 
     private String customerName;
@@ -48,6 +50,10 @@ public class InStorageAo {
     private String color;
 
     private String colorId;
+
+    private String orderColor;
+
+    private String orderColorId;
 
     private String count;
 

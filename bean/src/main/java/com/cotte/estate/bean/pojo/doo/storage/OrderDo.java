@@ -31,12 +31,12 @@ public class OrderDo {
     private String code;
     @Column(name = "customer_name")
     private String customerName;
-    @Column(name = "image")
-    private String image;
     @Column(name = "po_num")
     private String poNum;
     @Column(name = "item")
     private String item;
+    @Column(name = "color")
+    private String color;
     @Column(name = "count")
     private String count;
     @Column(name = "price")

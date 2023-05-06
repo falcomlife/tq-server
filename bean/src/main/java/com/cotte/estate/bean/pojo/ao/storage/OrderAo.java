@@ -35,11 +35,11 @@ public class OrderAo {
 
     private String customerNameId;
 
-    private String image;
-
     private String poNum;
 
     private String item;
+
+    private String color;
 
     private String colorId;
 

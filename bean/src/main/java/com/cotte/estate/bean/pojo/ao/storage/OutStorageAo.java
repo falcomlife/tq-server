@@ -31,12 +31,16 @@ public class OutStorageAo {
 
     private String inStorageId;
 
+    private String inStorageCode;
+
     private String customerName;
 
     private String customerNameId;
 
     private String image;
 
+    private String code;
+    
     private String name;
 
     private String poNum;
@@ -57,9 +61,9 @@ public class OutStorageAo {
 
     private String outCount;
 
-    private BigDecimal price;
+    private String outTypeId;
 
-    private BigDecimal sum;
+    private String outType;
 
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")

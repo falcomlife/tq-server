@@ -28,30 +28,18 @@ public class OutStorageDo {
     private String id;
     @Column(name = "in_storage_id")
     private String inStorageId;
-    @Column(name = "customer_name")
-    private String customerName;
     @Column(name = "image")
     private String image;
-    @Column(name = "name")
-    private String name;
-    @Column(name = "po_num")
-    private String poNum;
-    @Column(name = "item")
-    private String item;
+    @Column(name = "code")
+    private String code;
     @Column(name = "color")
     private String color;
-    @Column(name = "count")
-    private String count;
     @Column(name = "bunch_count")
     private Integer bunchCount;
-    @Column(name = "bake")
-    private String bake;
     @Column(name = "out_count")
     private String outCount;
-    @Column(name = "price")
-    private BigDecimal price;
-    @Column(name = "sum")
-    private BigDecimal sum;
+    @Column(name = "out_type")
+    private String outType;
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "create_time")

@@ -35,18 +35,14 @@ public class InStorageDo {
     private String image;
     @Column(name = "name")
     private String name;
-    @Column(name = "color")
-    private String color;
     @Column(name = "bunch_count")
     private Integer bunchCount;
     @Column(name = "bake")
     private String bake;
     @Column(name = "in_count")
     private String inCount;
-    @Column(name = "price")
-    private BigDecimal price;
-    @Column(name = "sum")
-    private BigDecimal sum;
+    @Column(name = "color")
+    private String color;
     @Column(name = "incoming_type")
     private String incomingType;
     @Temporal(TemporalType.TIMESTAMP)
