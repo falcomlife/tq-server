@@ -2,8 +2,10 @@ package com.sorawingwind.storage.controller;
 
 import com.cotte.estate.bean.pojo.ao.storage.InStorageAo;
 import com.cotte.estate.bean.pojo.ao.storage.OrderAo;
+import com.cotte.estate.bean.pojo.ao.storage.OutStorageAo;
 import com.cotte.estate.bean.pojo.doo.storage.InStorageDo;
 import com.cotte.estate.bean.pojo.doo.storage.OrderDo;
+import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
 import com.cotte.estatecommon.PageRS;
 import com.cotte.estatecommon.RS;
 import com.cotte.estatecommon.utils.CodeGenerUtil;
@@ -45,9 +47,8 @@ public class InStorageController {
         sb.append("i.bunch_count,");
         sb.append("i.bake,");
         sb.append("i.in_count,");
-        sb.append("i.price,");
-        sb.append("i.sum,");
         sb.append("i.incoming_type,");
+        sb.append("i.incoming_reason,");
         sb.append("i.create_time,");
         sb.append("i.modified_time,");
         sb.append("i.is_delete,");
@@ -55,8 +56,9 @@ public class InStorageController {
         sb.append("o.po_num,");
         sb.append("o.item,");
         sb.append("o.count,");
-        sb.append("o.code as order_code");
-        sb.append(" from in_storage i left join `order` o on o.id = i.order_id where i.is_delete = 0 ");
+        sb.append("o.code as order_code,");
+        sb.append("ot.code as out_storage_code");
+        sb.append(" from in_storage i left join `order` o on o.id = i.order_id left join out_storage ot on ot.id = i.out_storage_id where i.is_delete = 0 ");
         if (StringUtils.isNotBlank(customerNameItem)) {
             sb.append(" and o.customer_name = :customerNameItem ");
         }
@@ -80,6 +82,7 @@ public class InStorageController {
         List<InStorageAo> listaor = list.stream().map(item -> {
             InStorageAo aoInner = new InStorageAo();
             aoInner.setId(item.getString("id"));
+            aoInner.setOutStorageCode(item.getString("out_storage_code"));
             aoInner.setCode(item.getString("code"));
             aoInner.setBunchCount(item.getInteger("bunch_count"));
             aoInner.setCreateTime(item.getDate("create_time"));
@@ -88,7 +91,7 @@ public class InStorageController {
             aoInner.setName(item.getString("name"));
             aoInner.setPoNum(item.getString("po_num"));
             aoInner.setItem(item.getString("item"));
-            aoInner.setCount(item.getString("count"));
+            aoInner.setCount(item.getInteger("count"));
             aoInner.setOrderId(item.getString("order_id"));
             aoInner.setOrderCode(item.getString("order_code"));
             aoInner.setIsDelete(0);
@@ -100,6 +103,7 @@ public class InStorageController {
             aoInner.setOrderColorId(item.getString("order_color"));
             aoInner.setIncomingType(dictController.getById(item.getString("incoming_type")).getItemName());
             aoInner.setIncomingTypeId(item.getString("incoming_type"));
+            aoInner.setIncomingReason(item.getString("incoming_reason"));
             aoInner.setBake(dictController.getById(item.getString("bake")).getItemName());
             aoInner.setBakeId(item.getString("bake"));
             return aoInner;
@@ -114,24 +118,65 @@ public class InStorageController {
      */
     @PostMapping("/ids")
     public List<InStorageAo> getByIds(@RequestBody List<String> ids) {
-        ExpressionList<InStorageDo> el = Ebean.createQuery(InStorageDo.class).where();
-        if (!ids.isEmpty()) {
-            el.idIn(ids);
+        StringBuffer idssb = new StringBuffer();
+        for (String id:ids) {
+            idssb.append("\""+id+"\",");
         }
-        List<InStorageDo> list = el.order("create_time desc").findList();
-        List<InStorageAo> listao = new ListUtil<InStorageDo, InStorageAo>().copyList(list, InStorageAo.class);
-        List<InStorageAo> listaor = listao.stream().map(item -> {
+        String idsStr = idssb.toString().substring(0,idssb.toString().length()-1);
+        StringBuffer sb = new StringBuffer();
+        sb.append(" select ");
+        sb.append("i.id,");
+        sb.append("i.order_id,");
+        sb.append("i.code,");
+        sb.append("i.image,");
+        sb.append("i.name,");
+        sb.append("i.color,");
+        sb.append("o.color as order_color,");
+        sb.append("i.bunch_count,");
+        sb.append("i.bake,");
+        sb.append("i.in_count,");
+        sb.append("i.incoming_type,");
+        sb.append("i.incoming_reason,");
+        sb.append("i.create_time,");
+        sb.append("i.modified_time,");
+        sb.append("i.is_delete,");
+        sb.append("o.customer_name,");
+        sb.append("o.po_num,");
+        sb.append("o.item,");
+        sb.append("o.count,");
+        sb.append("o.code as order_code,");
+        sb.append("ot.code as out_storage_code");
+        sb.append(" from in_storage i left join `order` o on o.id = i.order_id left join out_storage ot on ot.id = i.out_storage_id where i.is_delete = 0 and i.id in ("+idsStr+")");
+        sb.append("order by i.create_time desc");
+        List<SqlRow> sqlRows = Ebean.createSqlQuery(sb.toString()).findList();
+
+        List<InStorageAo> listaor = sqlRows.stream().map(item -> {
             InStorageAo aoInner = new InStorageAo();
-            BeanUtils.copyProperties(item, aoInner);
-            String color = Ebean.createQuery(OrderDo.class).where().idEq(item.getOrderId()).findOne().getColor();
-            aoInner.setCustomerName(dictController.getById(item.getCustomerName()).getItemName());
-            aoInner.setCustomerNameId(item.getCustomerName());
-            aoInner.setColor(dictController.getById(color).getItemName());
-            aoInner.setColorId(color);
-            aoInner.setIncomingType(dictController.getById(item.getIncomingType()).getItemName());
-            aoInner.setIncomingTypeId(item.getIncomingType());
-            aoInner.setBake(dictController.getById(item.getBake()).getItemName());
-            aoInner.setBakeId(item.getBake());
+            aoInner.setId(item.getString("id"));
+            aoInner.setOutStorageCode(item.getString("out_storage_code"));
+            aoInner.setCode(item.getString("code"));
+            aoInner.setBunchCount(item.getInteger("bunch_count"));
+            aoInner.setCreateTime(item.getDate("create_time"));
+            aoInner.setImage(item.getString("image"));
+            aoInner.setInCount(item.getString("in_count"));
+            aoInner.setName(item.getString("name"));
+            aoInner.setPoNum(item.getString("po_num"));
+            aoInner.setItem(item.getString("item"));
+            aoInner.setCount(item.getInteger("count"));
+            aoInner.setOrderId(item.getString("order_id"));
+            aoInner.setOrderCode(item.getString("order_code"));
+            aoInner.setIsDelete(0);
+            aoInner.setCustomerName(dictController.getById(item.getString("customer_name")).getItemName());
+            aoInner.setCustomerNameId(item.getString("customer_name"));
+            aoInner.setColor(dictController.getById(item.getString("color")).getItemName());
+            aoInner.setColorId(item.getString("color"));
+            aoInner.setOrderColor(dictController.getById(item.getString("order_color")).getItemName());
+            aoInner.setOrderColorId(item.getString("order_color"));
+            aoInner.setIncomingType(dictController.getById(item.getString("incoming_type")).getItemName());
+            aoInner.setIncomingTypeId(item.getString("incoming_type"));
+            aoInner.setIncomingReason(item.getString("incoming_reason"));
+            aoInner.setBake(dictController.getById(item.getString("bake")).getItemName());
+            aoInner.setBakeId(item.getString("bake"));
             return aoInner;
         }).collect(Collectors.toList());
         return listaor;
@@ -246,5 +291,51 @@ public class InStorageController {
         iao.setItem(doo.getItem());
         iao.setCount(doo.getCount());
         return RS.ok(iao);
+    }
+
+    @GetMapping("/order")
+    public RS getByOrderId(@RequestParam String orderId){
+        return RS.ok(Ebean.createQuery(InStorageDo.class).where().eq("is_delete",0).eq("order_id",orderId).findList().stream().map(item ->{
+            InStorageAo aoInner = new InStorageAo();
+            BeanUtils.copyProperties(item,aoInner);
+            aoInner.setColor(dictController.getById(item.getColor()).getItemName());
+            aoInner.setColorId(item.getColor());
+            aoInner.setIncomingType(dictController.getById(item.getIncomingType()).getItemName());
+            aoInner.setIncomingTypeId(item.getIncomingType());
+            aoInner.setIncomingReason(item.getIncomingReason());
+            aoInner.setBake(dictController.getById(item.getBake()).getItemName());
+            aoInner.setBakeId(item.getBake());
+            List<OutStorageAo> list = new ArrayList<>();
+            if(StringUtils.isNotBlank(item.getOutStorageId())){
+                OutStorageAo ao = new OutStorageAo();
+                OutStorageDo doo = Ebean.createQuery(OutStorageDo.class).where().eq("id",item.getOutStorageId()).findOne();
+                BeanUtils.copyProperties(doo,ao);
+                list.add(ao);
+                aoInner.setExpandType("outStorageByInStorage");
+            }else{
+                List<OutStorageDo> listInner = Ebean.createQuery(OutStorageDo.class).where().eq("in_storage_id",item.getId()).findList();
+                list.addAll(new ListUtil<OutStorageDo,OutStorageAo>().copyList(listInner,OutStorageAo.class));
+                aoInner.setExpandType("");
+                aoInner.setExpandType("outStoragesByInStorage");
+            }
+            aoInner.setOutStorageList(list);
+            return aoInner;
+        }).collect(Collectors.toList()));
+    }
+
+    @GetMapping("/outStorage")
+    public RS getByOutStorageId(@RequestParam String outStorageId){
+        return RS.ok(Ebean.createQuery(InStorageDo.class).where().eq("is_delete",0).eq("out_storage_id",outStorageId).findList().stream().map(item ->{
+            InStorageAo aoInner = new InStorageAo();
+            BeanUtils.copyProperties(item,aoInner);
+            aoInner.setColor(dictController.getById(item.getColor()).getItemName());
+            aoInner.setColorId(item.getColor());
+            aoInner.setIncomingType(dictController.getById(item.getIncomingType()).getItemName());
+            aoInner.setIncomingTypeId(item.getIncomingType());
+            aoInner.setIncomingReason(item.getIncomingReason());
+            aoInner.setBake(dictController.getById(item.getBake()).getItemName());
+            aoInner.setBakeId(item.getBake());
+            return aoInner;
+        }).collect(Collectors.toList()));
     }
 }

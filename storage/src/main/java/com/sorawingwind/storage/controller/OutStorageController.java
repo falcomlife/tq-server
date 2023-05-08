@@ -3,6 +3,7 @@ package com.sorawingwind.storage.controller;
 import com.cotte.estate.bean.pojo.ao.storage.InStorageAo;
 import com.cotte.estate.bean.pojo.ao.storage.OutStorageAo;
 import com.cotte.estate.bean.pojo.doo.storage.InStorageDo;
+import com.cotte.estate.bean.pojo.doo.storage.OrderDo;
 import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
 import com.cotte.estatecommon.PageRS;
 import com.cotte.estatecommon.RS;
@@ -22,9 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -194,5 +193,51 @@ public class OutStorageController {
         String filename = UUIDUtil.simpleUUid() + suffixName;
         file.transferTo(new File("/home/sorawingwind/workhome/test/upload/" + filename));
         return RS.ok(filename);
+    }
+
+    @GetMapping("/code")
+    public RS getByCode(@RequestParam(required = false) String code) {
+        List<Map<String,String>> list = Ebean.createQuery(OutStorageDo.class).where().like("code", "%" + code + "%").eq("is_delete", false).findList().stream().map(item -> {
+            Map<String, String> map = new HashMap<>();
+            map.put("label",item.getCode());
+            map.put("value",item.getId());
+            return map;
+        }).collect(Collectors.toList());
+        return RS.ok(list);
+    }
+
+    @GetMapping("/list")
+    public RS getListByInStorage(@RequestParam String inStorageId){
+        return RS.ok(Ebean.createQuery(OutStorageDo.class).where().eq("is_delete",0).eq("in_storage_id",inStorageId).findList().stream().map(item ->{
+            OutStorageAo aoInner = new OutStorageAo();
+            BeanUtils.copyProperties(item,aoInner);
+            if("1".equals(item.getOutType())){
+                aoInner.setOutType(OutType.NORMAL.getName());
+            }else if("2".equals(item.getOutType())){
+                aoInner.setOutType(OutType.INSTORAGEERR.getName());
+            }else if("3".equals(item.getOutType())){
+                aoInner.setOutType(OutType.WORKLOSS.getName());
+            }else if("4".equals(item.getOutType())){
+                aoInner.setOutType(OutType.OTHER.getName());
+            }
+            return aoInner;
+        }).collect(Collectors.toList()));
+    }
+    @GetMapping("/one")
+    public RS getOneByInStorage(@RequestParam String outStorageId){
+        return RS.ok(Ebean.createQuery(OutStorageDo.class).where().eq("is_delete",0).eq("id",outStorageId).findList().stream().map(item ->{
+            OutStorageAo aoInner = new OutStorageAo();
+            BeanUtils.copyProperties(item,aoInner);
+            if("1".equals(item.getOutType())){
+                aoInner.setOutType(OutType.NORMAL.getName());
+            }else if("2".equals(item.getOutType())){
+                aoInner.setOutType(OutType.INSTORAGEERR.getName());
+            }else if("3".equals(item.getOutType())){
+                aoInner.setOutType(OutType.WORKLOSS.getName());
+            }else if("4".equals(item.getOutType())){
+                aoInner.setOutType(OutType.OTHER.getName());
+            }
+            return aoInner;
+        }).collect(Collectors.toList()));
     }
 }

@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @ClassName orderAO
@@ -32,6 +33,10 @@ public class InStorageAo {
     private String orderId;
 
     private String orderCode;
+
+    private String outStorageId;
+
+    private String outStorageCode;
 
     private String code;
 
@@ -55,7 +60,7 @@ public class InStorageAo {
 
     private String orderColorId;
 
-    private String count;
+    private Integer count;
 
     private Integer bunchCount;
 
@@ -72,6 +77,12 @@ public class InStorageAo {
     private String incomingType;
 
     private String incomingTypeId;
+
+    private String incomingReason;
+
+    private String expandType;
+
+    private List<OutStorageAo> outStorageList;
 
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")

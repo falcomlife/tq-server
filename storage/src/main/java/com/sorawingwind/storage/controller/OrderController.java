@@ -1,12 +1,15 @@
 package com.sorawingwind.storage.controller;
 
 import com.cotte.estate.bean.pojo.ao.storage.OrderAo;
+import com.cotte.estate.bean.pojo.doo.storage.InStorageDo;
 import com.cotte.estate.bean.pojo.doo.storage.OrderDo;
+import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
 import com.cotte.estatecommon.PageRS;
 import com.cotte.estatecommon.RS;
 import com.cotte.estatecommon.utils.CodeGenerUtil;
 import com.cotte.estatecommon.utils.ListUtil;
 import com.cotte.estatecommon.utils.UUIDUtil;
+import com.sorawingwind.storage.OutType;
 import io.ebean.Ebean;
 import io.ebean.ExpressionList;
 import io.ebean.SqlRow;
@@ -15,6 +18,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -45,15 +49,35 @@ public class OrderController {
         el.setMaxRows(pageSize);
         List<OrderDo> list = el.order("create_time desc").findList();
         List<OrderAo> listao = new ListUtil<OrderDo, OrderAo>().copyList(list, OrderAo.class);
-        List<OrderAo> listaor = listao.stream().map(item -> {
+        List<String> orderIds = listao.stream().map(OrderAo::getId).collect(Collectors.toList());
+        List<InStorageDo> listIn = null;
+        List<OutStorageDo> listOut = null;
+        if(!orderIds.isEmpty()){
+             listIn = Ebean.createQuery(InStorageDo.class).where().in("order_id",orderIds).eq("is_delete",0).findList();
+             List<String> inStorageIds = listIn.stream().map(InStorageDo::getId).collect(Collectors.toList());
+             if(!listIn.isEmpty()){
+                  listOut = Ebean.createQuery(OutStorageDo.class).where().in("in_storage_id",inStorageIds).eq("is_delete",0).findList();
+             }
+        }
+        List<OrderAo> listaor = new ArrayList<>();
+        for (OrderAo item:listao) {
             OrderAo aoInner = new OrderAo();
             BeanUtils.copyProperties(item, aoInner);
+            List<String> inids = listIn.stream().filter(iin -> item.getId().equals(iin.getOrderId())).map( InStorageDo::getId).collect(Collectors.toList());
+            int replat = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> "5".equals(iin.getIncomingType())).mapToInt(iin -> iin.getBunchCount()).sum();
+            int incomingErr = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin -> (OutType.INSTORAGEERR.getIndex()+"").equals(oin.getOutType())).mapToInt(oin -> oin.getBunchCount()).sum();
+            BigDecimal replatratio = new BigDecimal(replat).divide(new BigDecimal(item.getCount()),2,BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+            BigDecimal incomingErrratio = new BigDecimal(incomingErr).divide(new BigDecimal(item.getCount()),2,BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+            aoInner.setReplatCount(replat);
+            aoInner.setReplatRatio(replatratio);
+            aoInner.setIncomingCount(incomingErr);
+            aoInner.setIncomingRatio(incomingErrratio);
             aoInner.setCustomerName(dictController.getById(item.getCustomerName()).getItemName());
             aoInner.setCustomerNameId(item.getCustomerName());
             aoInner.setColor(dictController.getById(item.getColor()).getItemName());
             aoInner.setColorId(item.getColor());
-            return aoInner;
-        }).collect(Collectors.toList());
+            listaor.add(aoInner);
+        }
         return new PageRS<>(pageSize, pageIndex, totleRowCount, totleRowCount / pageSize, listaor);
     }
 

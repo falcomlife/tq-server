@@ -29,6 +29,8 @@ public class InStorageDo {
     private String id;
     @Column(name = "order_id")
     private String orderId;
+    @Column(name = "out_storage_id")
+    private String outStorageId;
     @Column(name = "code")
     private String code;
     @Column(name = "image")
@@ -45,6 +47,8 @@ public class InStorageDo {
     private String color;
     @Column(name = "incoming_type")
     private String incomingType;
+    @Column(name = "incoming_reason")
+    private String incomingReason;
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "create_time")

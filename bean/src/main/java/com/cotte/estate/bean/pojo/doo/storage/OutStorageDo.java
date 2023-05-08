@@ -32,8 +32,6 @@ public class OutStorageDo {
     private String image;
     @Column(name = "code")
     private String code;
-    @Column(name = "color")
-    private String color;
     @Column(name = "bunch_count")
     private Integer bunchCount;
     @Column(name = "out_count")

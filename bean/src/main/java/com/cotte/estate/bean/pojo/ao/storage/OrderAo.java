@@ -43,11 +43,19 @@ public class OrderAo {
 
     private String colorId;
 
-    private String count;
+    private Integer count;
 
     private BigDecimal price;
 
     private BigDecimal sum;
+
+    private Integer replatCount;
+
+    private BigDecimal replatRatio;
+
+    private Integer incomingCount;
+
+    private BigDecimal incomingRatio;
 
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
