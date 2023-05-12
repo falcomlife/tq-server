@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tq
+  namespace: self
 spec:
   selector:
     matchLabels:
@@ -34,36 +35,26 @@ spec:
           requests:
             cpu: 100m
             memory: 500Mi
+        volumeMounts:
+        - mountPath: /opt/storage/images/
+          name: tq
+      volumes:
+      - name: tq
+        persistentVolumeClaim:
+          claimName: tq
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: tq
+  namespace: self
 spec:
   ports:
   - port: 8080
     name: tq
     targetPort: 8080
+    nodePort: 38888
   selector:
     app: tq
+  type: NodePort
 ---
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: tq
-spec:
-  gateways:
-    - istio-system/gateway
-  hosts:
-    - test.ciiplat.com
-  http:
-    - match:
-        - uri:
-            prefix: /tq
-      rewrite:
-        uri: /
-      route:
-        - destination:
-            host: tq
-            port:
-              number: 8080

@@ -65,6 +65,8 @@ public class OutStorageAo {
 
     private String outType;
 
+    private String inCount;
+
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;

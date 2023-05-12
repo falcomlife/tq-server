@@ -6,6 +6,7 @@ FROM swr.cn-north-4.myhuaweicloud.com/cotte-internal/centos7-tools-jdk8-git:0.0.
 ARG CONTAINERNAME
 WORKDIR /opt
 COPY microservice.jar /opt
+RUN mkdir -p /opt/storage/images
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 ENV LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \

@@ -9,7 +9,7 @@ import com.cotte.estatecommon.RS;
 import com.cotte.estatecommon.utils.CodeGenerUtil;
 import com.cotte.estatecommon.utils.ListUtil;
 import com.cotte.estatecommon.utils.UUIDUtil;
-import com.sorawingwind.storage.OutType;
+import com.cotte.estatecommon.enumType.OutType;
 import io.ebean.Ebean;
 import io.ebean.ExpressionList;
 import io.ebean.SqlRow;
@@ -32,7 +32,7 @@ public class OrderController {
     private DictController dictController;
 
     @GetMapping
-    public PageRS<OrderAo> getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
+    public PageRS<OrderAo> getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String po,@RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
         ExpressionList<OrderDo> el = Ebean.createQuery(OrderDo.class).where();
         if (StringUtils.isNotBlank(customerNameItem)) {
             el.eq("customer_name", customerNameItem);
@@ -43,6 +43,12 @@ public class OrderController {
         if (StringUtils.isNotBlank(endtime)) {
             el.le("create_time", endtime);
         }
+        if (StringUtils.isNotBlank(code)) {
+            el.like("code", "%" + code + "%");
+        }
+        if (StringUtils.isNotBlank(po)) {
+            el.like("po_num", "%" + po + "%");
+        }
         el.eq("is_delete", false);
         int totleRowCount = el.findCount();
         el.setFirstRow((pageIndex - 1) * pageSize);
@@ -50,28 +56,30 @@ public class OrderController {
         List<OrderDo> list = el.order("create_time desc").findList();
         List<OrderAo> listao = new ListUtil<OrderDo, OrderAo>().copyList(list, OrderAo.class);
         List<String> orderIds = listao.stream().map(OrderAo::getId).collect(Collectors.toList());
-        List<InStorageDo> listIn = null;
-        List<OutStorageDo> listOut = null;
-        if(!orderIds.isEmpty()){
-             listIn = Ebean.createQuery(InStorageDo.class).where().in("order_id",orderIds).eq("is_delete",0).findList();
-             List<String> inStorageIds = listIn.stream().map(InStorageDo::getId).collect(Collectors.toList());
-             if(!listIn.isEmpty()){
-                  listOut = Ebean.createQuery(OutStorageDo.class).where().in("in_storage_id",inStorageIds).eq("is_delete",0).findList();
-             }
+        List<InStorageDo> listIn = new ArrayList<>();
+        List<OutStorageDo> listOut = new ArrayList<>();
+        if (!orderIds.isEmpty()) {
+            listIn = Ebean.createQuery(InStorageDo.class).where().in("order_id", orderIds).eq("is_delete", 0).findList();
+            List<String> inStorageIds = listIn.stream().map(InStorageDo::getId).collect(Collectors.toList());
+            if (!listIn.isEmpty()) {
+                listOut = Ebean.createQuery(OutStorageDo.class).where().in("in_storage_id", inStorageIds).eq("is_delete", 0).findList();
+            }
         }
         List<OrderAo> listaor = new ArrayList<>();
-        for (OrderAo item:listao) {
+        for (OrderAo item : listao) {
             OrderAo aoInner = new OrderAo();
             BeanUtils.copyProperties(item, aoInner);
-            List<String> inids = listIn.stream().filter(iin -> item.getId().equals(iin.getOrderId())).map( InStorageDo::getId).collect(Collectors.toList());
+            List<String> inids = listIn.stream().filter(iin -> item.getId().equals(iin.getOrderId())).map(InStorageDo::getId).collect(Collectors.toList());
             int replat = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> "5".equals(iin.getIncomingType())).mapToInt(iin -> iin.getBunchCount()).sum();
-            int incomingErr = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin -> (OutType.INSTORAGEERR.getIndex()+"").equals(oin.getOutType())).mapToInt(oin -> oin.getBunchCount()).sum();
-            BigDecimal replatratio = new BigDecimal(replat).divide(new BigDecimal(item.getCount()),2,BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
-            BigDecimal incomingErrratio = new BigDecimal(incomingErr).divide(new BigDecimal(item.getCount()),2,BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+            int incomingErr = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin -> (OutType.INSTORAGEERR.getIndex() + "").equals(oin.getOutType())).mapToInt(oin -> oin.getBunchCount()).sum();
+            if (item.getCount() != null && item.getCount() != 0) {
+                BigDecimal replatratio = new BigDecimal(replat).divide(new BigDecimal(item.getCount()), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+                BigDecimal incomingErrratio = new BigDecimal(incomingErr).divide(new BigDecimal(item.getCount()), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+                aoInner.setReplatRatio(replatratio);
+                aoInner.setIncomingRatio(incomingErrratio);
+            }
             aoInner.setReplatCount(replat);
-            aoInner.setReplatRatio(replatratio);
             aoInner.setIncomingCount(incomingErr);
-            aoInner.setIncomingRatio(incomingErrratio);
             aoInner.setCustomerName(dictController.getById(item.getCustomerName()).getItemName());
             aoInner.setCustomerNameId(item.getCustomerName());
             aoInner.setColor(dictController.getById(item.getColor()).getItemName());
@@ -85,7 +93,13 @@ public class OrderController {
     public RS save(@RequestBody OrderAo orderAo) {
         OrderDo doo = new OrderDo();
         BeanUtils.copyProperties(orderAo, doo);
-        int count = Ebean.createQuery(OrderDo.class).where().eq("is_delete", 0).findCount();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
+        Date start = calendar.getTime();
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
+        Date end = calendar.getTime();
+        int count = Ebean.createQuery(OrderDo.class).where().ge("create_time", start).le("create_time", end).findCount();
         doo.setCode(CodeGenerUtil.getCode("OR", count));
         doo.setId(UUIDUtil.simpleUUid());
         doo.setCreateTime(new Date());
@@ -134,8 +148,8 @@ public class OrderController {
         Date start = sdf.parse(time);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(start);
-        calendar.add(calendar.MONTH, 2);
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
+        calendar.add(calendar.MONTH, 1);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
         Date end = calendar.getTime();
         return RS.ok(Ebean.createQuery(OrderDo.class).where().ge("create_time", start).lt("create_time", end).findCount());
 //        }
@@ -147,8 +161,8 @@ public class OrderController {
         Date start = sdf.parse(time);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(start);
-        calendar.add(calendar.MONTH, 2);
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
+        calendar.add(calendar.MONTH, 1);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
         Date end = calendar.getTime();
         String startStr = sdf.format(start);
         String endStr = sdf.format(end);
@@ -166,10 +180,10 @@ public class OrderController {
 
     @GetMapping("/code")
     public RS getByCode(@RequestParam(required = false) String code) {
-        List<Map<String,String>> list = Ebean.createQuery(OrderDo.class).where().like("code", "%" + code + "%").eq("is_delete", false).findList().stream().map(item -> {
+        List<Map<String, String>> list = Ebean.createQuery(OrderDo.class).where().like("code", "%" + code + "%").eq("is_delete", false).findList().stream().map(item -> {
             Map<String, String> map = new HashMap<>();
-            map.put("label",item.getCode());
-            map.put("value",item.getId());
+            map.put("label", item.getCode());
+            map.put("value", item.getId());
             return map;
         }).collect(Collectors.toList());
         return RS.ok(list);
@@ -179,7 +193,7 @@ public class OrderController {
     public RS getById(@RequestParam(required = true) String id) {
         OrderAo ao = new OrderAo();
         OrderDo doo = Ebean.createQuery(OrderDo.class).where().idEq(id).findOne();
-        BeanUtils.copyProperties(doo,ao);
+        BeanUtils.copyProperties(doo, ao);
         return RS.ok(ao);
     }
 }

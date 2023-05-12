@@ -1,23 +1,19 @@
 package com.sorawingwind.storage.controller;
 
-import com.cotte.estate.bean.pojo.ao.storage.InStorageAo;
 import com.cotte.estate.bean.pojo.ao.storage.OutStorageAo;
-import com.cotte.estate.bean.pojo.doo.storage.InStorageDo;
-import com.cotte.estate.bean.pojo.doo.storage.OrderDo;
 import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
 import com.cotte.estatecommon.PageRS;
 import com.cotte.estatecommon.RS;
 import com.cotte.estatecommon.utils.CodeGenerUtil;
-import com.cotte.estatecommon.utils.ListUtil;
 import com.cotte.estatecommon.utils.UUIDUtil;
-import com.sorawingwind.storage.OutType;
+import com.cotte.estatecommon.enumType.OutType;
 import io.ebean.Ebean;
-import io.ebean.ExpressionList;
 import io.ebean.SqlQuery;
 import io.ebean.SqlRow;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,40 +28,11 @@ public class OutStorageController {
 
     @Autowired
     private DictController dictController;
+    @Value("${project.file.path}")
+    private String path;
 
-    //    @GetMapping
-//    public PageRS<OutStorageAo> getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
-//        ExpressionList<OutStorageDo> el = Ebean.createQuery(OutStorageDo.class).where();
-//        if (StringUtils.isNotBlank(customerNameItem)) {
-//            el.eq("customer_name", customerNameItem);
-//        }
-//        if (StringUtils.isNotBlank(starttime)) {
-//            el.ge("create_time", starttime);
-//        }
-//        if (StringUtils.isNotBlank(endtime)) {
-//            el.le("create_time", endtime);
-//        }
-//        el.eq("is_delete",false);
-//        int totleRowCount = el.findCount();
-//        el.setFirstRow((pageIndex - 1) * pageSize);
-//        el.setMaxRows(pageSize);
-//        List<OutStorageDo> list = el.order("create_time desc").findList();
-//        List<OutStorageAo> listao = new ListUtil<OutStorageDo, OutStorageAo>().copyList(list, OutStorageAo.class);
-//        List<OutStorageAo> listaor = listao.stream().map(item -> {
-//            OutStorageAo aoInner = new OutStorageAo();
-//            BeanUtils.copyProperties(item, aoInner);
-//            aoInner.setCustomerName(dictController.getById(item.getCustomerName()).getItemName());
-//            aoInner.setCustomerNameId(item.getCustomerName());
-//            aoInner.setColor(dictController.getById(item.getColor()).getItemName());
-//            aoInner.setColorId(item.getColor());
-//            aoInner.setBake(dictController.getById(item.getBake()).getItemName());
-//            aoInner.setBakeId(item.getBake());
-//            return aoInner;
-//        }).collect(Collectors.toList());
-//        return new PageRS<>(pageSize, pageIndex, totleRowCount, totleRowCount / pageSize, listaor);
-//    }
     @GetMapping
-    public PageRS<OutStorageAo> getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
+    public PageRS<OutStorageAo> getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
         StringBuffer sb = new StringBuffer();
         sb.append(" select ");
         sb.append(" ot.id, ");
@@ -86,7 +53,8 @@ public class OutStorageController {
         sb.append(" i.code as in_storage_code, ");
         sb.append(" i.name as name, ");
         sb.append(" i.image as image, ");
-        sb.append(" i.bake as bake ");
+        sb.append(" i.bake as bake, ");
+        sb.append(" i.in_count as in_count ");
         sb.append(" from out_storage ot ");
         sb.append(" left join in_storage i on ot.in_storage_id = i.id");
         sb.append(" left join `order` o on o.id = i.order_id");
@@ -99,6 +67,9 @@ public class OutStorageController {
         }
         if (StringUtils.isNotBlank(endtime)) {
             sb.append(" and i.create_time <= :endtime ");
+        }
+        if (StringUtils.isNotBlank(code)) {
+            sb.append(" and ot.code like '%" + code + "%' ");
         }
         sb.append("order by i.create_time desc");
         int totleRowCount = 0;
@@ -133,16 +104,8 @@ public class OutStorageController {
             aoInner.setBake(dictController.getById(item.getString("bake")).getItemName());
             aoInner.setBakeId(item.getString("bake"));
             aoInner.setOutTypeId(item.getString("out_type"));
-            if("1".equals(item.getString("out_type"))){
-                aoInner.setOutType(OutType.NORMAL.getName());
-            }else if("2".equals(item.getString("out_type"))){
-                aoInner.setOutType(OutType.INSTORAGEERR.getName());
-            }else if("3".equals(item.getString("out_type"))){
-                aoInner.setOutType(OutType.WORKLOSS.getName());
-            }else if("4".equals(item.getString("out_type"))){
-                aoInner.setOutType(OutType.OTHER.getName());
-            }
-
+            aoInner.setOutType(OutType.getNameByIndex(Integer.parseInt(item.getString("out_type"))));
+            aoInner.setInCount(item.getString("in_count"));
             return aoInner;
         }).collect(Collectors.toList());
         return new PageRS<>(pageSize, pageIndex, totleRowCount, totleRowCount / pageSize, listaor);
@@ -154,12 +117,12 @@ public class OutStorageController {
         BeanUtils.copyProperties(outStorageAo, doo);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
-        calendar.set(calendar.get(Calendar.YEAR),calendar.get(Calendar.MONTH),calendar.get(Calendar.DAY_OF_MONTH),0,0,0);
+        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
         Date start = calendar.getTime();
-        calendar.add(Calendar.DAY_OF_MONTH,1);
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
         Date end = calendar.getTime();
-        int count = Ebean.createQuery(OutStorageDo.class).where().ge("create_time",start).le("create_time",end).findCount();
-        doo.setCode(CodeGenerUtil.getCode("O",count));
+        int count = Ebean.createQuery(OutStorageDo.class).where().ge("create_time", start).le("create_time", end).findCount();
+        doo.setCode(CodeGenerUtil.getCode("O", count));
         doo.setId(UUIDUtil.simpleUUid());
         doo.setCreateTime(new Date());
         doo.setIsDelete(0);
@@ -191,52 +154,37 @@ public class OutStorageController {
         String originFilename = file.getOriginalFilename();
         String suffixName = originFilename.substring(originFilename.lastIndexOf('.'));
         String filename = UUIDUtil.simpleUUid() + suffixName;
-        file.transferTo(new File("/home/sorawingwind/workhome/test/upload/" + filename));
+        file.transferTo(new File(this.path + filename));
         return RS.ok(filename);
     }
 
     @GetMapping("/code")
     public RS getByCode(@RequestParam(required = false) String code) {
-        List<Map<String,String>> list = Ebean.createQuery(OutStorageDo.class).where().like("code", "%" + code + "%").eq("is_delete", false).findList().stream().map(item -> {
+        List<Map<String, String>> list = Ebean.createQuery(OutStorageDo.class).where().like("code", "%" + code + "%").eq("is_delete", false).findList().stream().map(item -> {
             Map<String, String> map = new HashMap<>();
-            map.put("label",item.getCode());
-            map.put("value",item.getId());
+            map.put("label", item.getCode());
+            map.put("value", item.getId());
             return map;
         }).collect(Collectors.toList());
         return RS.ok(list);
     }
 
     @GetMapping("/list")
-    public RS getListByInStorage(@RequestParam String inStorageId){
-        return RS.ok(Ebean.createQuery(OutStorageDo.class).where().eq("is_delete",0).eq("in_storage_id",inStorageId).findList().stream().map(item ->{
+    public RS getListByInStorage(@RequestParam String inStorageId) {
+        return RS.ok(Ebean.createQuery(OutStorageDo.class).where().eq("is_delete", 0).eq("in_storage_id", inStorageId).findList().stream().map(item -> {
             OutStorageAo aoInner = new OutStorageAo();
-            BeanUtils.copyProperties(item,aoInner);
-            if("1".equals(item.getOutType())){
-                aoInner.setOutType(OutType.NORMAL.getName());
-            }else if("2".equals(item.getOutType())){
-                aoInner.setOutType(OutType.INSTORAGEERR.getName());
-            }else if("3".equals(item.getOutType())){
-                aoInner.setOutType(OutType.WORKLOSS.getName());
-            }else if("4".equals(item.getOutType())){
-                aoInner.setOutType(OutType.OTHER.getName());
-            }
+            BeanUtils.copyProperties(item, aoInner);
+            aoInner.setOutType(OutType.getNameByIndex(Integer.parseInt(item.getOutType())));
             return aoInner;
         }).collect(Collectors.toList()));
     }
+
     @GetMapping("/one")
-    public RS getOneByInStorage(@RequestParam String outStorageId){
-        return RS.ok(Ebean.createQuery(OutStorageDo.class).where().eq("is_delete",0).eq("id",outStorageId).findList().stream().map(item ->{
+    public RS getOneByInStorage(@RequestParam String outStorageId) {
+        return RS.ok(Ebean.createQuery(OutStorageDo.class).where().eq("is_delete", 0).eq("id", outStorageId).findList().stream().map(item -> {
             OutStorageAo aoInner = new OutStorageAo();
-            BeanUtils.copyProperties(item,aoInner);
-            if("1".equals(item.getOutType())){
-                aoInner.setOutType(OutType.NORMAL.getName());
-            }else if("2".equals(item.getOutType())){
-                aoInner.setOutType(OutType.INSTORAGEERR.getName());
-            }else if("3".equals(item.getOutType())){
-                aoInner.setOutType(OutType.WORKLOSS.getName());
-            }else if("4".equals(item.getOutType())){
-                aoInner.setOutType(OutType.OTHER.getName());
-            }
+            BeanUtils.copyProperties(item, aoInner);
+            aoInner.setOutType(OutType.getNameByIndex(Integer.parseInt(item.getOutType())));
             return aoInner;
         }).collect(Collectors.toList()));
     }

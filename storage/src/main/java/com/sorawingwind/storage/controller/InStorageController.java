@@ -34,7 +34,7 @@ public class InStorageController {
     private DictController dictController;
 
     @GetMapping
-    public PageRS<InStorageAo> getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
+    public PageRS<InStorageAo> getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
         StringBuffer sb = new StringBuffer();
         sb.append(" select ");
         sb.append("i.id,");
@@ -67,6 +67,9 @@ public class InStorageController {
         }
         if (StringUtils.isNotBlank(endtime)) {
             sb.append(" and i.create_time <= :endtime ");
+        }
+        if (StringUtils.isNotBlank(code)) {
+            sb.append(" and i.code like '%" + code + "%' ");
         }
         sb.append("order by i.create_time desc");
         int totleRowCount = 0;
@@ -119,10 +122,10 @@ public class InStorageController {
     @PostMapping("/ids")
     public List<InStorageAo> getByIds(@RequestBody List<String> ids) {
         StringBuffer idssb = new StringBuffer();
-        for (String id:ids) {
-            idssb.append("\""+id+"\",");
+        for (String id : ids) {
+            idssb.append("\"" + id + "\",");
         }
-        String idsStr = idssb.toString().substring(0,idssb.toString().length()-1);
+        String idsStr = idssb.toString().substring(0, idssb.toString().length() - 1);
         StringBuffer sb = new StringBuffer();
         sb.append(" select ");
         sb.append("i.id,");
@@ -146,7 +149,7 @@ public class InStorageController {
         sb.append("o.count,");
         sb.append("o.code as order_code,");
         sb.append("ot.code as out_storage_code");
-        sb.append(" from in_storage i left join `order` o on o.id = i.order_id left join out_storage ot on ot.id = i.out_storage_id where i.is_delete = 0 and i.id in ("+idsStr+")");
+        sb.append(" from in_storage i left join `order` o on o.id = i.order_id left join out_storage ot on ot.id = i.out_storage_id where i.is_delete = 0 and i.id in (" + idsStr + ")");
         sb.append("order by i.create_time desc");
         List<SqlRow> sqlRows = Ebean.createSqlQuery(sb.toString()).findList();
 
@@ -188,12 +191,12 @@ public class InStorageController {
         BeanUtils.copyProperties(inStorageAo, doo);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
-        calendar.set(calendar.get(Calendar.YEAR),calendar.get(Calendar.MONTH),calendar.get(Calendar.DAY_OF_MONTH),0,0,0);
+        calendar.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH), 0, 0, 0);
         Date start = calendar.getTime();
-        calendar.add(Calendar.DAY_OF_MONTH,1);
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
         Date end = calendar.getTime();
-        int count = Ebean.createQuery(InStorageDo.class).where().ge("create_time",start).le("create_time",end).findCount();
-        doo.setCode(CodeGenerUtil.getCode("I",count));
+        int count = Ebean.createQuery(InStorageDo.class).where().ge("create_time", start).le("create_time", end).findCount();
+        doo.setCode(CodeGenerUtil.getCode("I", count));
         doo.setId(UUIDUtil.simpleUUid());
         doo.setCreateTime(new Date());
         doo.setIsDelete(0);
@@ -241,8 +244,8 @@ public class InStorageController {
         Date start = sdf.parse(time);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(start);
-        calendar.add(calendar.MONTH, 2);
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
+        calendar.add(calendar.MONTH, 1);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
         Date end = calendar.getTime();
         List<InStorageDo> recountList = Ebean.createQuery(InStorageDo.class).where().ge("create_time", start).lt("create_time", end).findList();
         int sumcount = 0;
@@ -266,12 +269,13 @@ public class InStorageController {
         map.put("ratio", ratio);
         return RS.ok(map);
     }
+
     @GetMapping("/code")
     public RS getByCode(@RequestParam(required = false) String code) {
-        List<Map<String,String>> list = Ebean.createQuery(InStorageDo.class).where().like("code", "%" + code + "%").eq("is_delete", false).findList().stream().map(item -> {
+        List<Map<String, String>> list = Ebean.createQuery(InStorageDo.class).where().like("code", "%" + code + "%").eq("is_delete", false).findList().stream().map(item -> {
             Map<String, String> map = new HashMap<>();
-            map.put("label",item.getCode());
-            map.put("value",item.getId());
+            map.put("label", item.getCode());
+            map.put("value", item.getId());
             return map;
         }).collect(Collectors.toList());
         return RS.ok(list);
@@ -281,10 +285,14 @@ public class InStorageController {
     public RS getById(@RequestParam(required = true) String id) {
         InStorageAo iao = new InStorageAo();
         InStorageDo idoo = Ebean.createQuery(InStorageDo.class).where().idEq(id).findOne();
-        BeanUtils.copyProperties(idoo,iao);
+        BeanUtils.copyProperties(idoo, iao);
         OrderDo doo = Ebean.createQuery(OrderDo.class).where().idEq(idoo.getOrderId()).findOne();
-        iao.setCustomerName(dictController.getById(doo.getCustomerName()).getItemName());
-        iao.setColor(dictController.getById(doo.getColor()).getItemName());
+        if (StringUtils.isNotBlank(doo.getCustomerName())) {
+            iao.setCustomerName(dictController.getById(doo.getCustomerName()).getItemName());
+        }
+        if (StringUtils.isNotBlank(doo.getColor())) {
+            iao.setColor(dictController.getById(doo.getColor()).getItemName());
+        }
         iao.setBake(dictController.getById(idoo.getBake()).getItemName());
         iao.setCustomerNameId(doo.getCustomerName());
         iao.setPoNum(doo.getPoNum());
@@ -294,10 +302,10 @@ public class InStorageController {
     }
 
     @GetMapping("/order")
-    public RS getByOrderId(@RequestParam String orderId){
-        return RS.ok(Ebean.createQuery(InStorageDo.class).where().eq("is_delete",0).eq("order_id",orderId).findList().stream().map(item ->{
+    public RS getByOrderId(@RequestParam String orderId) {
+        return RS.ok(Ebean.createQuery(InStorageDo.class).where().eq("is_delete", 0).eq("order_id", orderId).findList().stream().map(item -> {
             InStorageAo aoInner = new InStorageAo();
-            BeanUtils.copyProperties(item,aoInner);
+            BeanUtils.copyProperties(item, aoInner);
             aoInner.setColor(dictController.getById(item.getColor()).getItemName());
             aoInner.setColorId(item.getColor());
             aoInner.setIncomingType(dictController.getById(item.getIncomingType()).getItemName());
@@ -306,15 +314,15 @@ public class InStorageController {
             aoInner.setBake(dictController.getById(item.getBake()).getItemName());
             aoInner.setBakeId(item.getBake());
             List<OutStorageAo> list = new ArrayList<>();
-            if(StringUtils.isNotBlank(item.getOutStorageId())){
+            if (StringUtils.isNotBlank(item.getOutStorageId())) {
                 OutStorageAo ao = new OutStorageAo();
-                OutStorageDo doo = Ebean.createQuery(OutStorageDo.class).where().eq("id",item.getOutStorageId()).findOne();
-                BeanUtils.copyProperties(doo,ao);
+                OutStorageDo doo = Ebean.createQuery(OutStorageDo.class).where().eq("id", item.getOutStorageId()).findOne();
+                BeanUtils.copyProperties(doo, ao);
                 list.add(ao);
                 aoInner.setExpandType("outStorageByInStorage");
-            }else{
-                List<OutStorageDo> listInner = Ebean.createQuery(OutStorageDo.class).where().eq("in_storage_id",item.getId()).findList();
-                list.addAll(new ListUtil<OutStorageDo,OutStorageAo>().copyList(listInner,OutStorageAo.class));
+            } else {
+                List<OutStorageDo> listInner = Ebean.createQuery(OutStorageDo.class).where().eq("in_storage_id", item.getId()).findList();
+                list.addAll(new ListUtil<OutStorageDo, OutStorageAo>().copyList(listInner, OutStorageAo.class));
                 aoInner.setExpandType("");
                 aoInner.setExpandType("outStoragesByInStorage");
             }
@@ -324,10 +332,10 @@ public class InStorageController {
     }
 
     @GetMapping("/outStorage")
-    public RS getByOutStorageId(@RequestParam String outStorageId){
-        return RS.ok(Ebean.createQuery(InStorageDo.class).where().eq("is_delete",0).eq("out_storage_id",outStorageId).findList().stream().map(item ->{
+    public RS getByOutStorageId(@RequestParam String outStorageId) {
+        return RS.ok(Ebean.createQuery(InStorageDo.class).where().eq("is_delete", 0).eq("out_storage_id", outStorageId).findList().stream().map(item -> {
             InStorageAo aoInner = new InStorageAo();
-            BeanUtils.copyProperties(item,aoInner);
+            BeanUtils.copyProperties(item, aoInner);
             aoInner.setColor(dictController.getById(item.getColor()).getItemName());
             aoInner.setColorId(item.getColor());
             aoInner.setIncomingType(dictController.getById(item.getIncomingType()).getItemName());
