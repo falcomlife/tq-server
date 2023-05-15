@@ -6,10 +6,11 @@ import com.cotte.estate.bean.pojo.doo.storage.OrderDo;
 import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
 import com.cotte.estatecommon.PageRS;
 import com.cotte.estatecommon.RS;
+import com.cotte.estatecommon.enums.InUnit;
 import com.cotte.estatecommon.utils.CodeGenerUtil;
 import com.cotte.estatecommon.utils.ListUtil;
 import com.cotte.estatecommon.utils.UUIDUtil;
-import com.cotte.estatecommon.enumType.OutType;
+import com.cotte.estatecommon.enums.OutType;
 import io.ebean.Ebean;
 import io.ebean.ExpressionList;
 import io.ebean.SqlRow;
@@ -32,7 +33,7 @@ public class OrderController {
     private DictController dictController;
 
     @GetMapping
-    public PageRS<OrderAo> getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String po,@RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
+    public PageRS<OrderAo> getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String po, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
         ExpressionList<OrderDo> el = Ebean.createQuery(OrderDo.class).where();
         if (StringUtils.isNotBlank(customerNameItem)) {
             el.eq("customer_name", customerNameItem);
@@ -53,7 +54,12 @@ public class OrderController {
         int totleRowCount = el.findCount();
         el.setFirstRow((pageIndex - 1) * pageSize);
         el.setMaxRows(pageSize);
-        List<OrderDo> list = el.order("create_time desc").findList();
+        List<OrderDo> list = null;
+        if (StringUtils.isBlank(customerNameItem)) {
+            list = el.order("create_time desc").findList();
+        } else {
+            list = el.order("po_num desc, create_time desc").findList();
+        }
         List<OrderAo> listao = new ListUtil<OrderDo, OrderAo>().copyList(list, OrderAo.class);
         List<String> orderIds = listao.stream().map(OrderAo::getId).collect(Collectors.toList());
         List<InStorageDo> listIn = new ArrayList<>();
@@ -70,16 +76,18 @@ public class OrderController {
             OrderAo aoInner = new OrderAo();
             BeanUtils.copyProperties(item, aoInner);
             List<String> inids = listIn.stream().filter(iin -> item.getId().equals(iin.getOrderId())).map(InStorageDo::getId).collect(Collectors.toList());
-            int replat = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> "5".equals(iin.getIncomingType())).mapToInt(iin -> iin.getBunchCount()).sum();
-            int incomingErr = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin -> (OutType.INSTORAGEERR.getIndex() + "").equals(oin.getOutType())).mapToInt(oin -> oin.getBunchCount()).sum();
-            if (item.getCount() != null && item.getCount() != 0) {
-                BigDecimal replatratio = new BigDecimal(replat).divide(new BigDecimal(item.getCount()), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
-                BigDecimal incomingErrratio = new BigDecimal(incomingErr).divide(new BigDecimal(item.getCount()), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+            int replat = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> "5".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
+            int incomingErr = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin -> (OutType.INSTORAGEERR.getIndex() + "").equals(oin.getOutType())).mapToInt(oin -> oin.getBunchCount().intValue()).sum();
+            int inStorageSumCountCal = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> !"5".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
+            if (item.getCount() != null && item.getCount().compareTo(new BigDecimal(0)) != 0) {
+                BigDecimal replatratio = new BigDecimal(replat).divide(item.getCount(), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+                BigDecimal incomingErrratio = new BigDecimal(incomingErr).divide(item.getCount(), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
                 aoInner.setReplatRatio(replatratio);
                 aoInner.setIncomingRatio(incomingErrratio);
             }
             aoInner.setReplatCount(replat);
             aoInner.setIncomingCount(incomingErr);
+            aoInner.setPartSumCountCal(inStorageSumCountCal);
             aoInner.setCustomerName(dictController.getById(item.getCustomerName()).getItemName());
             aoInner.setCustomerNameId(item.getCustomerName());
             aoInner.setColor(dictController.getById(item.getColor()).getItemName());

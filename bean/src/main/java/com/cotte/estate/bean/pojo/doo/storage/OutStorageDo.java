@@ -33,7 +33,7 @@ public class OutStorageDo {
     @Column(name = "code")
     private String code;
     @Column(name = "bunch_count")
-    private Integer bunchCount;
+    private BigDecimal bunchCount;
     @Column(name = "out_count")
     private String outCount;
     @Column(name = "out_type")

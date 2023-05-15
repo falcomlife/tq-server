@@ -38,7 +38,9 @@ public class InStorageDo {
     @Column(name = "name")
     private String name;
     @Column(name = "bunch_count")
-    private Integer bunchCount;
+    private BigDecimal bunchCount;
+    @Column(name = "unit")
+    private String unit;
     @Column(name = "bake")
     private String bake;
     @Column(name = "in_count")

@@ -6,7 +6,7 @@ import com.cotte.estatecommon.PageRS;
 import com.cotte.estatecommon.RS;
 import com.cotte.estatecommon.utils.CodeGenerUtil;
 import com.cotte.estatecommon.utils.UUIDUtil;
-import com.cotte.estatecommon.enumType.OutType;
+import com.cotte.estatecommon.enums.OutType;
 import io.ebean.Ebean;
 import io.ebean.SqlQuery;
 import io.ebean.SqlRow;
@@ -88,7 +88,7 @@ public class OutStorageController {
             aoInner.setInStorageId(item.getString("in_storage_id"));
             aoInner.setInStorageCode(item.getString("in_storage_code"));
             aoInner.setCode(item.getString("code"));
-            aoInner.setBunchCount(item.getInteger("bunch_count"));
+            aoInner.setBunchCount(item.getBigDecimal("bunch_count"));
             aoInner.setCreateTime(item.getDate("create_time"));
             aoInner.setImage(item.getString("image"));
             aoInner.setOutCount(item.getString("out_count"));

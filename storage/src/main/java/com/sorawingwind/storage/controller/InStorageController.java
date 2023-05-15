@@ -8,6 +8,7 @@ import com.cotte.estate.bean.pojo.doo.storage.OrderDo;
 import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
 import com.cotte.estatecommon.PageRS;
 import com.cotte.estatecommon.RS;
+import com.cotte.estatecommon.enums.InUnit;
 import com.cotte.estatecommon.utils.CodeGenerUtil;
 import com.cotte.estatecommon.utils.ListUtil;
 import com.cotte.estatecommon.utils.UUIDUtil;
@@ -20,6 +21,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.lang.model.type.UnionType;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -47,6 +49,7 @@ public class InStorageController {
         sb.append("i.bunch_count,");
         sb.append("i.bake,");
         sb.append("i.in_count,");
+        sb.append("i.unit,");
         sb.append("i.incoming_type,");
         sb.append("i.incoming_reason,");
         sb.append("i.create_time,");
@@ -87,14 +90,16 @@ public class InStorageController {
             aoInner.setId(item.getString("id"));
             aoInner.setOutStorageCode(item.getString("out_storage_code"));
             aoInner.setCode(item.getString("code"));
-            aoInner.setBunchCount(item.getInteger("bunch_count"));
+            aoInner.setBunchCount(item.getBigDecimal("bunch_count"));
             aoInner.setCreateTime(item.getDate("create_time"));
             aoInner.setImage(item.getString("image"));
             aoInner.setInCount(item.getString("in_count"));
+            aoInner.setUnit(InUnit.getNameByIndex(Integer.parseInt(item.getString("unit"))));
+            aoInner.setUnitId(item.getString("unit"));
             aoInner.setName(item.getString("name"));
             aoInner.setPoNum(item.getString("po_num"));
             aoInner.setItem(item.getString("item"));
-            aoInner.setCount(item.getInteger("count"));
+            aoInner.setCount(item.getBigDecimal("count"));
             aoInner.setOrderId(item.getString("order_id"));
             aoInner.setOrderCode(item.getString("order_code"));
             aoInner.setIsDelete(0);
@@ -138,6 +143,7 @@ public class InStorageController {
         sb.append("i.bunch_count,");
         sb.append("i.bake,");
         sb.append("i.in_count,");
+        sb.append("i.unit,");
         sb.append("i.incoming_type,");
         sb.append("i.incoming_reason,");
         sb.append("i.create_time,");
@@ -152,20 +158,20 @@ public class InStorageController {
         sb.append(" from in_storage i left join `order` o on o.id = i.order_id left join out_storage ot on ot.id = i.out_storage_id where i.is_delete = 0 and i.id in (" + idsStr + ")");
         sb.append("order by i.create_time desc");
         List<SqlRow> sqlRows = Ebean.createSqlQuery(sb.toString()).findList();
-
         List<InStorageAo> listaor = sqlRows.stream().map(item -> {
             InStorageAo aoInner = new InStorageAo();
             aoInner.setId(item.getString("id"));
             aoInner.setOutStorageCode(item.getString("out_storage_code"));
             aoInner.setCode(item.getString("code"));
-            aoInner.setBunchCount(item.getInteger("bunch_count"));
+            aoInner.setBunchCount(item.getBigDecimal("bunch_count"));
             aoInner.setCreateTime(item.getDate("create_time"));
             aoInner.setImage(item.getString("image"));
             aoInner.setInCount(item.getString("in_count"));
+            aoInner.setUnit(item.getString("unit"));
             aoInner.setName(item.getString("name"));
             aoInner.setPoNum(item.getString("po_num"));
             aoInner.setItem(item.getString("item"));
-            aoInner.setCount(item.getInteger("count"));
+            aoInner.setCount(item.getBigDecimal("count"));
             aoInner.setOrderId(item.getString("order_id"));
             aoInner.setOrderCode(item.getString("order_code"));
             aoInner.setIsDelete(0);
@@ -211,6 +217,7 @@ public class InStorageController {
         doo.setColor(inStorageAo.getColorId());
         doo.setBake(inStorageAo.getBakeId());
         doo.setIncomingType(inStorageAo.getIncomingTypeId());
+        doo.setUnit(inStorageAo.getUnitId());
         doo.setModifiedTime(new Date());
         Ebean.update(doo);
         return RS.ok();
@@ -248,21 +255,21 @@ public class InStorageController {
         calendar.set(Calendar.DAY_OF_MONTH, 1);
         Date end = calendar.getTime();
         List<InStorageDo> recountList = Ebean.createQuery(InStorageDo.class).where().ge("create_time", start).lt("create_time", end).findList();
-        int sumcount = 0;
-        int recount = 0;
+        BigDecimal sumcount = new BigDecimal(0);
+        BigDecimal recount = new BigDecimal(0);
         for (InStorageDo doo : recountList) {
             if ("5".equals(doo.getIncomingType())) {
                 if (doo.getBunchCount() != null) {
-                    recount += doo.getBunchCount();
+                    recount = recount.add(doo.getBunchCount());
                 }
             }
             if (doo.getBunchCount() != null) {
-                sumcount += doo.getBunchCount();
+                sumcount = sumcount.add(doo.getBunchCount());
             }
         }
         BigDecimal ratio = new BigDecimal(0);
-        if (sumcount != 0) {
-            ratio = (new BigDecimal(recount).divide(new BigDecimal(sumcount), 4, BigDecimal.ROUND_HALF_UP)).multiply(new BigDecimal(100)).setScale(2);
+        if (sumcount.compareTo(BigDecimal.ZERO) == 0) {
+            ratio = (recount.divide(sumcount, 4, BigDecimal.ROUND_HALF_UP)).multiply(new BigDecimal(100)).setScale(2);
         }
         Map<String, Object> map = new HashMap<>();
         map.put("recount", recount);

@@ -38,7 +38,9 @@ public class OrderDo {
     @Column(name = "color")
     private String color;
     @Column(name = "count")
-    private Integer count;
+    private BigDecimal count;
+    @Column(name = "part_sum_count")
+    private BigDecimal partSumCount;
     @Column(name = "price")
     private BigDecimal price;
     @Column(name = "sum")

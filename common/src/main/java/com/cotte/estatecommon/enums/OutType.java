@@ -1,4 +1,4 @@
-package com.cotte.estatecommon.enumType;
+package com.cotte.estatecommon.enums;
 
 public enum OutType {
     GOOD("良品", 1), POOR("不良", 2), INSTORAGEERR("来料异常", 3), PLATINUM("白金出库", 4), CUSO4("硫酸铜出库", 5), OTHER("其他", 6);

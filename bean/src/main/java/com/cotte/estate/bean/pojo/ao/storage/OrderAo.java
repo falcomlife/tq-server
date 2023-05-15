@@ -43,7 +43,13 @@ public class OrderAo {
 
     private String colorId;
 
-    private Integer count;
+    private BigDecimal count;
+
+    private BigDecimal partSumCount;
+
+    private Integer partSumCountCal;
+
+    private BigDecimal outStroageSumCount;
 
     private BigDecimal price;
 

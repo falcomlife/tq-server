@@ -53,7 +53,7 @@ public class OutStorageAo {
 
     private String count;
 
-    private Integer bunchCount;
+    private BigDecimal bunchCount;
 
     private String bake;
 

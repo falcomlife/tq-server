@@ -60,15 +60,19 @@ public class InStorageAo {
 
     private String orderColorId;
 
-    private Integer count;
+    private BigDecimal count;
 
-    private Integer bunchCount;
+    private BigDecimal bunchCount;
 
     private String bake;
 
     private String bakeId;
 
     private String inCount;
+
+    private String unit;
+    
+    private String unitId;
 
     private BigDecimal price;
 
