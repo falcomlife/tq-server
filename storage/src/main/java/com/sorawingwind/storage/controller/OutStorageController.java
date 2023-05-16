@@ -159,14 +159,51 @@ public class OutStorageController {
     }
 
     @GetMapping("/code")
-    public RS getByCode(@RequestParam(required = false) String code) {
-        List<Map<String, String>> list = Ebean.createQuery(OutStorageDo.class).where().like("code", "%" + code + "%").eq("is_delete", false).findList().stream().map(item -> {
+    public RS getByCode(@RequestParam(required = false) String code,@RequestParam(required = false) String orderId,@RequestParam(required = false) String item) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(" select ");
+        sb.append(" ot.id, ");
+        sb.append(" ot.in_storage_id, ");
+        sb.append(" ot.bunch_count, ");
+        sb.append(" ot.out_count, ");
+        sb.append(" ot.code, ");
+        sb.append(" ot.out_type, ");
+        sb.append(" ot.create_time, ");
+        sb.append(" ot.modified_time, ");
+        sb.append(" ot.is_delete, ");
+        sb.append(" o.customer_name, ");
+        sb.append(" o.po_num, ");
+        sb.append(" o.item, ");
+        sb.append(" o.color, ");
+        sb.append(" o.count, ");
+        sb.append(" o.code as order_code, ");
+        sb.append(" i.code as in_storage_code, ");
+        sb.append(" i.name as name, ");
+        sb.append(" i.image as image, ");
+        sb.append(" i.bake as bake, ");
+        sb.append(" i.in_count as in_count ");
+        sb.append(" from out_storage ot ");
+        sb.append(" left join in_storage i on ot.in_storage_id = i.id");
+        sb.append(" left join `order` o on o.id = i.order_id");
+        sb.append("  where ot.is_delete = 0  ");
+        if (StringUtils.isNotBlank(code)) {
+            sb.append(" and ot.code like '%" + code + "%' ");
+        }
+        if (StringUtils.isNotBlank(orderId)) {
+            sb.append(" and o.id = '" + orderId + "' ");
+        }
+        if (StringUtils.isNotBlank(item)) {
+            sb.append(" and o.item = '" + item + "' ");
+        }
+        List<SqlRow> list = Ebean.createSqlQuery(sb.toString()).findList();
+
+        List<Map<String, String>> listaor = list.stream().map(iitem -> {
             Map<String, String> map = new HashMap<>();
-            map.put("label", item.getCode());
-            map.put("value", item.getId());
+            map.put("label", iitem.getString("code"));
+            map.put("value", iitem.getString("id"));
             return map;
         }).collect(Collectors.toList());
-        return RS.ok(list);
+        return RS.ok(listaor);
     }
 
     @GetMapping("/list")

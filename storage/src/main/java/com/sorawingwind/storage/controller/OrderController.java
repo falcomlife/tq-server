@@ -33,7 +33,7 @@ public class OrderController {
     private DictController dictController;
 
     @GetMapping
-    public PageRS<OrderAo> getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String po, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
+    public PageRS<OrderAo> getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String po, @RequestParam(required = false) String item, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
         ExpressionList<OrderDo> el = Ebean.createQuery(OrderDo.class).where();
         if (StringUtils.isNotBlank(customerNameItem)) {
             el.eq("customer_name", customerNameItem);
@@ -49,6 +49,9 @@ public class OrderController {
         }
         if (StringUtils.isNotBlank(po)) {
             el.like("po_num", "%" + po + "%");
+        }
+        if (StringUtils.isNotBlank(item)) {
+            el.like("item", "%" + item + "%");
         }
         el.eq("is_delete", false);
         int totleRowCount = el.findCount();
@@ -72,26 +75,26 @@ public class OrderController {
             }
         }
         List<OrderAo> listaor = new ArrayList<>();
-        for (OrderAo item : listao) {
+        for (OrderAo oitem : listao) {
             OrderAo aoInner = new OrderAo();
-            BeanUtils.copyProperties(item, aoInner);
-            List<String> inids = listIn.stream().filter(iin -> item.getId().equals(iin.getOrderId())).map(InStorageDo::getId).collect(Collectors.toList());
+            BeanUtils.copyProperties(oitem, aoInner);
+            List<String> inids = listIn.stream().filter(iin -> oitem.getId().equals(iin.getOrderId())).map(InStorageDo::getId).collect(Collectors.toList());
             int replat = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> "5".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
             int incomingErr = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin -> (OutType.INSTORAGEERR.getIndex() + "").equals(oin.getOutType())).mapToInt(oin -> oin.getBunchCount().intValue()).sum();
             int inStorageSumCountCal = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> !"5".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
-            if (item.getCount() != null && item.getCount().compareTo(new BigDecimal(0)) != 0) {
-                BigDecimal replatratio = new BigDecimal(replat).divide(item.getCount(), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
-                BigDecimal incomingErrratio = new BigDecimal(incomingErr).divide(item.getCount(), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+            if (oitem.getCount() != null && oitem.getCount().compareTo(new BigDecimal(0)) != 0) {
+                BigDecimal replatratio = new BigDecimal(replat).divide(oitem.getCount(), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+                BigDecimal incomingErrratio = new BigDecimal(incomingErr).divide(oitem.getCount(), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
                 aoInner.setReplatRatio(replatratio);
                 aoInner.setIncomingRatio(incomingErrratio);
             }
             aoInner.setReplatCount(replat);
             aoInner.setIncomingCount(incomingErr);
             aoInner.setPartSumCountCal(inStorageSumCountCal);
-            aoInner.setCustomerName(dictController.getById(item.getCustomerName()).getItemName());
-            aoInner.setCustomerNameId(item.getCustomerName());
-            aoInner.setColor(dictController.getById(item.getColor()).getItemName());
-            aoInner.setColorId(item.getColor());
+            aoInner.setCustomerName(dictController.getById(oitem.getCustomerName()).getItemName());
+            aoInner.setCustomerNameId(oitem.getCustomerName());
+            aoInner.setColor(dictController.getById(oitem.getColor()).getItemName());
+            aoInner.setColorId(oitem.getColor());
             listaor.add(aoInner);
         }
         return new PageRS<>(pageSize, pageIndex, totleRowCount, totleRowCount / pageSize, listaor);
@@ -174,7 +177,7 @@ public class OrderController {
         Date end = calendar.getTime();
         String startStr = sdf.format(start);
         String endStr = sdf.format(end);
-        List<SqlRow> list = Ebean.createSqlQuery("select color,sum( count ) as count from `order` where create_time >= :start and create_time <= :end and is_delete = 0 GROUP BY color order by count desc").setParameter("start", startStr).setParameter("end", endStr).findList();
+        List<SqlRow> list = Ebean.createSqlQuery("select color,sum( `sum` ) as count from `order` where create_time >= :start and create_time <= :end and is_delete = 0 GROUP BY color order by count desc").setParameter("start", startStr).setParameter("end", endStr).findList();
         return RS.ok(list.stream().map(item -> {
             String colorid = item.getString("color");
             String count = item.getString("count");
