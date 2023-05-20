@@ -8,9 +8,11 @@ import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
 import com.cotte.estatecommon.RS;
 import com.cotte.estatecommon.utils.ListUtil;
 import com.cotte.estatecommon.utils.UUIDUtil;
+import com.sorawingwind.storage.dao.DictDao;
 import io.ebean.Ebean;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,10 +21,12 @@ import java.util.List;
 @RequestMapping("/dict")
 public class DictController {
 
+    @Autowired
+    private DictDao dao;
+
     @GetMapping("/items")
     public RS getDictByType(@RequestParam String type) {
-        List<DictDo> dictdo = Ebean.createQuery(DictDo.class).where().eq("type", type).findList();
-        return RS.ok(new ListUtil<DictDo, DictAo>().copyList(dictdo, DictAo.class));
+        return this.dao.getDictByType(type);
 
     }
 
@@ -32,7 +36,7 @@ public class DictController {
         ao.setItem(UUIDUtil.simpleUUid());
         DictDo doo = new DictDo();
         BeanUtils.copyProperties(ao, doo);
-        Ebean.save(doo);
+        this.dao.save(doo);
         return RS.ok();
     }
 
@@ -40,7 +44,7 @@ public class DictController {
         if (StringUtils.isBlank(id)) {
             return new DictDo();
         }
-        DictDo doo = Ebean.createQuery(DictDo.class).where().idEq(id).findOne();
+        DictDo doo = this.dao.getById(id);
         if (doo == null) {
             return new DictDo();
         } else {

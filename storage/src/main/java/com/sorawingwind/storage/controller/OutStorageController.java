@@ -7,6 +7,7 @@ import com.cotte.estatecommon.RS;
 import com.cotte.estatecommon.utils.CodeGenerUtil;
 import com.cotte.estatecommon.utils.UUIDUtil;
 import com.cotte.estatecommon.enums.OutType;
+import com.sorawingwind.storage.dao.OutStorageDao;
 import io.ebean.Ebean;
 import io.ebean.SqlQuery;
 import io.ebean.SqlRow;
@@ -27,61 +28,16 @@ import java.util.stream.Collectors;
 public class OutStorageController {
 
     @Autowired
+    private OutStorageDao dao;
+    @Autowired
     private DictController dictController;
     @Value("${project.file.path}")
     private String path;
 
     @GetMapping
-    public PageRS<OutStorageAo> getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
-        StringBuffer sb = new StringBuffer();
-        sb.append(" select ");
-        sb.append(" ot.id, ");
-        sb.append(" ot.in_storage_id, ");
-        sb.append(" ot.bunch_count, ");
-        sb.append(" ot.out_count, ");
-        sb.append(" ot.code, ");
-        sb.append(" ot.out_type, ");
-        sb.append(" ot.create_time, ");
-        sb.append(" ot.modified_time, ");
-        sb.append(" ot.is_delete, ");
-        sb.append(" o.customer_name, ");
-        sb.append(" o.po_num, ");
-        sb.append(" o.item, ");
-        sb.append(" o.color, ");
-        sb.append(" o.count, ");
-        sb.append(" o.code as order_code, ");
-        sb.append(" i.code as in_storage_code, ");
-        sb.append(" i.name as name, ");
-        sb.append(" i.image as image, ");
-        sb.append(" i.bake as bake, ");
-        sb.append(" i.in_count as in_count ");
-        sb.append(" from out_storage ot ");
-        sb.append(" left join in_storage i on ot.in_storage_id = i.id");
-        sb.append(" left join `order` o on o.id = i.order_id");
-        sb.append("  where ot.is_delete = 0  ");
-        if (StringUtils.isNotBlank(customerNameItem)) {
-            sb.append(" and o.customer_name = :customerNameItem ");
-        }
-        if (StringUtils.isNotBlank(starttime)) {
-            sb.append(" and i.create_time >= :starttime ");
-        }
-        if (StringUtils.isNotBlank(endtime)) {
-            sb.append(" and i.create_time <= :endtime ");
-        }
-        if (StringUtils.isNotBlank(code)) {
-            sb.append(" and ot.code like '%" + code + "%' ");
-        }
-        sb.append("order by i.create_time desc");
-        int totleRowCount = 0;
-        List<SqlRow> sqlRows = Ebean.createSqlQuery(sb.toString()).setParameter("customerNameItem", customerNameItem).setParameter("customer_name_item", customerNameItem).setParameter("starttime", starttime).setParameter("endtime", endtime).findList();
-        if (sqlRows != null && !sqlRows.isEmpty()) {
-            totleRowCount = sqlRows.size();
-        }
-        SqlQuery sq = Ebean.createSqlQuery(sb.toString()).setParameter("customerNameItem", customerNameItem).setParameter("customer_name_item", customerNameItem).setParameter("starttime", starttime).setParameter("endtime", endtime);
-        sq.setFirstRow((pageIndex - 1) * pageSize);
-        sq.setMaxRows(pageSize);
-        List<SqlRow> list = sq.findList();
-
+    public RS getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
+        List<SqlRow> list = this.dao.getByPage(pageIndex, pageSize,customerNameItem,code, starttime, endtime);
+        Integer totleRowCount = this.dao.getCountByPage(pageIndex, pageSize,customerNameItem,code, starttime, endtime);
         List<OutStorageAo> listaor = list.stream().map(item -> {
             OutStorageAo aoInner = new OutStorageAo();
             aoInner.setId(item.getString("id"));
@@ -108,7 +64,7 @@ public class OutStorageController {
             aoInner.setInCount(item.getString("in_count"));
             return aoInner;
         }).collect(Collectors.toList());
-        return new PageRS<>(pageSize, pageIndex, totleRowCount, totleRowCount / pageSize, listaor);
+        return RS.ok(new PageRS<>(pageSize, pageIndex, totleRowCount, totleRowCount / pageSize, listaor));
     }
 
     @PostMapping
@@ -126,7 +82,7 @@ public class OutStorageController {
         doo.setId(UUIDUtil.simpleUUid());
         doo.setCreateTime(new Date());
         doo.setIsDelete(0);
-        Ebean.save(doo);
+        this.dao.save(doo);
         return RS.ok();
     }
 
@@ -135,7 +91,7 @@ public class OutStorageController {
         OutStorageDo doo = new OutStorageDo();
         BeanUtils.copyProperties(outStorageAo, doo);
         doo.setModifiedTime(new Date());
-        Ebean.update(doo);
+        this.dao.update(doo);
         return RS.ok();
     }
 
@@ -145,7 +101,7 @@ public class OutStorageController {
         for (OutStorageDo doo : list) {
             doo.setIsDelete(1);
         }
-        Ebean.updateAll(list);
+        this.dao.updataAll(list);
         return RS.ok();
     }
 
@@ -160,44 +116,7 @@ public class OutStorageController {
 
     @GetMapping("/code")
     public RS getByCode(@RequestParam(required = false) String code,@RequestParam(required = false) String orderId,@RequestParam(required = false) String item) {
-        StringBuffer sb = new StringBuffer();
-        sb.append(" select ");
-        sb.append(" ot.id, ");
-        sb.append(" ot.in_storage_id, ");
-        sb.append(" ot.bunch_count, ");
-        sb.append(" ot.out_count, ");
-        sb.append(" ot.code, ");
-        sb.append(" ot.out_type, ");
-        sb.append(" ot.create_time, ");
-        sb.append(" ot.modified_time, ");
-        sb.append(" ot.is_delete, ");
-        sb.append(" o.customer_name, ");
-        sb.append(" o.po_num, ");
-        sb.append(" o.item, ");
-        sb.append(" o.color, ");
-        sb.append(" o.count, ");
-        sb.append(" o.code as order_code, ");
-        sb.append(" i.code as in_storage_code, ");
-        sb.append(" i.name as name, ");
-        sb.append(" i.image as image, ");
-        sb.append(" i.bake as bake, ");
-        sb.append(" i.in_count as in_count ");
-        sb.append(" from out_storage ot ");
-        sb.append(" left join in_storage i on ot.in_storage_id = i.id");
-        sb.append(" left join `order` o on o.id = i.order_id");
-        sb.append("  where ot.is_delete = 0  ");
-        if (StringUtils.isNotBlank(code)) {
-            sb.append(" and ot.code like '%" + code + "%' ");
-        }
-        if (StringUtils.isNotBlank(orderId)) {
-            sb.append(" and o.id = '" + orderId + "' ");
-        }
-        if (StringUtils.isNotBlank(item)) {
-            sb.append(" and o.item = '" + item + "' ");
-        }
-        List<SqlRow> list = Ebean.createSqlQuery(sb.toString()).findList();
-
-        List<Map<String, String>> listaor = list.stream().map(iitem -> {
+        List<Map<String, String>> listaor = this.dao.getByCode(code,orderId,item).stream().map(iitem -> {
             Map<String, String> map = new HashMap<>();
             map.put("label", iitem.getString("code"));
             map.put("value", iitem.getString("id"));
@@ -208,7 +127,7 @@ public class OutStorageController {
 
     @GetMapping("/list")
     public RS getListByInStorage(@RequestParam String inStorageId) {
-        return RS.ok(Ebean.createQuery(OutStorageDo.class).where().eq("is_delete", 0).eq("in_storage_id", inStorageId).findList().stream().map(item -> {
+        return RS.ok(this.dao.getByInStorageId(inStorageId).stream().map(item -> {
             OutStorageAo aoInner = new OutStorageAo();
             BeanUtils.copyProperties(item, aoInner);
             aoInner.setOutType(OutType.getNameByIndex(Integer.parseInt(item.getOutType())));
@@ -218,7 +137,7 @@ public class OutStorageController {
 
     @GetMapping("/one")
     public RS getOneByInStorage(@RequestParam String outStorageId) {
-        return RS.ok(Ebean.createQuery(OutStorageDo.class).where().eq("is_delete", 0).eq("id", outStorageId).findList().stream().map(item -> {
+        return RS.ok(this.dao.getById(outStorageId).stream().map(item -> {
             OutStorageAo aoInner = new OutStorageAo();
             BeanUtils.copyProperties(item, aoInner);
             aoInner.setOutType(OutType.getNameByIndex(Integer.parseInt(item.getOutType())));
