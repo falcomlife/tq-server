@@ -1,5 +1,4 @@
 package com.cotte.estate.bean.pojo.doo.storage;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

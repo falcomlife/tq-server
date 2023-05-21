@@ -1,8 +1,6 @@
 package com.cotte.estate.bean.pojo.ao.storage;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +22,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-@ApiModel("订单管理")
 public class InStorageAo {
     @Id
     @GeneratedValue(generator="uuidGenerator")

@@ -12,7 +12,7 @@ import java.io.IOException;
 @Component
 @WebFilter(urlPatterns = "/*")
 @Order(2)
-public class CorsFilter implements Filter {
+public class SelfCorsFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)

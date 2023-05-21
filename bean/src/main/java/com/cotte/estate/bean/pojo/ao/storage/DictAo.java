@@ -1,7 +1,5 @@
 package com.cotte.estate.bean.pojo.ao.storage;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +17,6 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-@ApiModel("字典管理")
 public class DictAo {
 
     @Id

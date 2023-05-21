@@ -1,6 +1,5 @@
 package com.cotte.estate.bean.pojo.doo.storage;
 
-import io.swagger.annotations.ApiModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +16,6 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-@ApiModel("字典管理")
 @Table(name="dict")
 @Data
 public class DictDo {

@@ -1,7 +1,6 @@
 package com.cotte.estate.bean.pojo.doo.storage;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.annotations.ApiModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

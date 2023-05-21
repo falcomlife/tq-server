@@ -1,8 +1,6 @@
 package com.cotte.estate.bean.pojo.ao.storage;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +21,6 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-@ApiModel("出库管理")
 public class OutStorageAo {
     @Id
     @GeneratedValue(generator="uuidGenerator")

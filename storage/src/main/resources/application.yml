@@ -35,29 +35,6 @@ spring:
 ebean:
   search:
     packages: com.cotte.estate.bean.pojo.doo
-
-
-haikang:
-  contentType: application/json
-  parkListApi: /artemis/api/resource/v1/park/parkList
-  addCarsApi: /artemis/api/resource/v1/vehicle/batch/add
-  updateCardApi: /artemis/api/resource/v1/vehicle/single/update
-  delCarsApi: /artemis/api/resource/v1/vehicle/batch/delete
-  chargeCarApi: /artemis/api/pms/v1/car/charge
-  deletionChargeApi: /artemis/api/pms/v1/car/charge/deletion
-  alarmCarApi: /artemis/api/pms/v1/alarmCar/addition
-  deletionAlarmApi: /artemis/api/pms/v1/alarmCar/deletion
-  crossRecordsApi: /artemis/api/pms/v1/crossRecords/page
-  imageApi: /artemis/api/pms/v1/image
-  vehicleListApi: /artemis/api/resource/v1/vehicle/advance/vehicleList
-  project_id: 1849220873474c5e819a82fb67948716
-  deviceControlApi: /artemis/api/pms/v1/deviceControl
-  deviceControlBatchApi: /artemis/api/pms/v1/deviceControlBatch
-  entranceListApi: /artemis/api/resource/v1/entrance/entranceList
-  roadwayListApi: /artemis/api/resource/v1/roadway/roadwayList
-  eventSubscriptionByEventTypes: /artemis/api/eventService/v1/eventSubscriptionByEventTypes
-  eventSubscriptionView: /artemis/api/eventService/v1/eventSubscriptionView
-  eventUnSubscriptionByEventTypes: /artemis/api/eventService/v1/eventUnSubscriptionByEventTypes
 logging:
   level:
     io:

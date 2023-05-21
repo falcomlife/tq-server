@@ -6,8 +6,9 @@ spring:
     url: jdbc:mysql://localhost:3306/tq?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: bnsbdlmysql
-  resources:
-    static-locations: classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/,classpath:/admin/,classpath:/customer/,file:D:\storage\images\
+  web:
+    resources:
+      static-locations: classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/,classpath:/admin/,classpath:/customer/,file:D:\storage\images\
 okhttp:
   connectTimeout: 30
   readTimeout: 30
