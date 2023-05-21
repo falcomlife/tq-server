@@ -4,6 +4,7 @@ import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.write.metadata.WriteSheet;
 import com.cotte.estate.bean.pojo.ao.storage.OrderAo;
+import com.cotte.estate.bean.pojo.ao.storage.OrderExcelAo;
 import com.cotte.estate.bean.pojo.doo.storage.InStorageDo;
 import com.cotte.estate.bean.pojo.doo.storage.OrderDo;
 import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
@@ -177,7 +178,7 @@ public class OrderController {
     }
 
     @PostMapping("/excel")
-    public void download(HttpServletResponse response, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String po, @RequestParam(required = false) String item, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) throws Exception{
+    public void download(HttpServletResponse response,@RequestBody OrderExcelAo orderAo) throws Exception{
         response.setContentType("application/vnd.ms-excel");
         response.setCharacterEncoding("utf-8");
         String fileName = URLEncoder.encode("订单明细", "UTF-8");
@@ -187,7 +188,7 @@ public class OrderController {
         //FileOutputStream outputStream = new FileOutputStream("/home/sorawingwind/桌面/xx.xlsx");
 
         //获取数据
-        List<OrderDo> listdo = this.dao.getExcels(customerNameItem, code, po, item, starttime, endtime).stream().map(iitem -> {
+        List<OrderDo> listdo = this.dao.getExcels(orderAo.getCustomerNameItem(), orderAo.getCode(), orderAo.getPo(), orderAo.getItem(), orderAo.getStarttime(), orderAo.getEndtime()).stream().map(iitem -> {
             iitem.setColor(dictController.getById(iitem.getColor()).getItemName());
             return iitem;
         }).collect(Collectors.toList());
