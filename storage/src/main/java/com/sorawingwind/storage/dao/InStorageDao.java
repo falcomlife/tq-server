@@ -39,7 +39,7 @@ public class InStorageDao {
         sb.append("o.count,");
         sb.append("o.code as order_code,");
         sb.append("ot.code as out_storage_code");
-        sb.append(" from in_storage i left join `order` o on o.id = i.order_id left join out_storage ot on ot.id = i.out_storage_id where i.is_delete = 0 ");
+        sb.append(" from b_in_storage i left join b_order o on o.id = i.order_id left join b_out_storage ot on ot.id = i.out_storage_id where i.is_delete = 0 ");
         if (StringUtils.isNotBlank(customerNameItem)) {
             sb.append(" and o.customer_name = :customerNameItem ");
         }
@@ -64,7 +64,7 @@ public class InStorageDao {
         StringBuffer sb = new StringBuffer();
         sb.append(" select ");
         sb.append(" count(*) as count");
-        sb.append(" from in_storage i left join `order` o on o.id = i.order_id left join out_storage ot on ot.id = i.out_storage_id where i.is_delete = 0 ");
+        sb.append(" from b_in_storage i left join b_order o on o.id = i.order_id left join b_out_storage ot on ot.id = i.out_storage_id where i.is_delete = 0 ");
         if (StringUtils.isNotBlank(customerNameItem)) {
             sb.append(" and o.customer_name = :customerNameItem ");
         }
@@ -110,7 +110,7 @@ public class InStorageDao {
         sb.append("o.count,");
         sb.append("o.code as order_code,");
         sb.append("ot.code as out_storage_code");
-        sb.append(" from in_storage i left join `order` o on o.id = i.order_id left join out_storage ot on ot.id = i.out_storage_id where i.is_delete = 0 and i.id in (" + idsStr + ")");
+        sb.append(" from b_in_storage i left join b_order o on o.id = i.order_id left join b_out_storage ot on ot.id = i.out_storage_id where i.is_delete = 0 and i.id in (" + idsStr + ")");
         sb.append("order by i.create_time desc");
         return Ebean.createSqlQuery(sb.toString()).findList();
     }

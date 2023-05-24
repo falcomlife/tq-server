@@ -36,9 +36,9 @@ public class OutStorageDao {
         sb.append(" i.image as image, ");
         sb.append(" i.bake as bake, ");
         sb.append(" i.in_count as in_count ");
-        sb.append(" from out_storage ot ");
-        sb.append(" left join in_storage i on ot.in_storage_id = i.id");
-        sb.append(" left join `order` o on o.id = i.order_id");
+        sb.append(" from b_out_storage ot ");
+        sb.append(" left join b_in_storage i on ot.in_storage_id = i.id");
+        sb.append(" left join `b_order` o on o.id = i.order_id");
         sb.append("  where ot.is_delete = 0  ");
         if (StringUtils.isNotBlank(customerNameItem)) {
             sb.append(" and o.customer_name = :customerNameItem ");
@@ -63,9 +63,9 @@ public class OutStorageDao {
         StringBuffer sb = new StringBuffer();
         sb.append(" select ");
         sb.append(" count(*) as count ");
-        sb.append(" from out_storage ot ");
-        sb.append(" left join in_storage i on ot.in_storage_id = i.id");
-        sb.append(" left join `order` o on o.id = i.order_id");
+        sb.append(" from b_out_storage ot ");
+        sb.append(" left join b_in_storage i on ot.in_storage_id = i.id");
+        sb.append(" left join `b_order` o on o.id = i.order_id");
         sb.append("  where ot.is_delete = 0  ");
         if (StringUtils.isNotBlank(customerNameItem)) {
             sb.append(" and o.customer_name = :customerNameItem ");
@@ -117,9 +117,9 @@ public class OutStorageDao {
         sb.append(" i.image as image, ");
         sb.append(" i.bake as bake, ");
         sb.append(" i.in_count as in_count ");
-        sb.append(" from out_storage ot ");
-        sb.append(" left join in_storage i on ot.in_storage_id = i.id");
-        sb.append(" left join `order` o on o.id = i.order_id");
+        sb.append(" from b_out_storage ot ");
+        sb.append(" left join b_in_storage i on ot.in_storage_id = i.id");
+        sb.append(" left join `b_order` o on o.id = i.order_id");
         sb.append("  where ot.is_delete = 0  ");
         if (StringUtils.isNotBlank(code)) {
             sb.append(" and ot.code like '%" + code + "%' ");

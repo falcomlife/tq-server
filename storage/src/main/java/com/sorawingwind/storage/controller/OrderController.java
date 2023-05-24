@@ -20,6 +20,7 @@ import com.sorawingwind.storage.dao.OrderDao;
 import io.ebean.Ebean;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -43,6 +44,7 @@ public class OrderController {
     private DictController dictController;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('I-3')")
     public RS getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String po, @RequestParam(required = false) String item, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
         List<OrderDo> list = this.dao.getByPage(pageIndex, pageSize, customerNameItem, code, po, item,starttime, endtime);
         int totleRowCount = this.dao.getCountByPage(pageIndex, pageSize, customerNameItem, code, po, item,starttime, endtime);
@@ -84,6 +86,7 @@ public class OrderController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('I-3')")
     public RS save(@RequestBody OrderAo orderAo) {
         OrderDo doo = new OrderDo();
         BeanUtils.copyProperties(orderAo, doo);
@@ -103,6 +106,7 @@ public class OrderController {
     }
 
     @PutMapping
+    @PreAuthorize("hasAuthority('I-3')")
     public RS update(@RequestBody OrderAo orderAo) {
         OrderDo doo = new OrderDo();
         BeanUtils.copyProperties(orderAo, doo);
@@ -114,6 +118,7 @@ public class OrderController {
     }
 
     @DeleteMapping
+    @PreAuthorize("hasAuthority('I-3')")
     public RS delete(@RequestBody List<String> ids) {
         List<OrderDo> list = Ebean.createQuery(OrderDo.class).where().idIn(ids).findList();
         for (OrderDo doo : list) {
@@ -124,6 +129,7 @@ public class OrderController {
     }
 
     @GetMapping("/statistics")
+    @PreAuthorize("hasAuthority('I-3')")
     public RS getMouthStatistics(@RequestParam(required = false) String time) throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date start = sdf.parse(time);
@@ -137,6 +143,7 @@ public class OrderController {
     }
 
     @GetMapping("/statistics/color")
+    @PreAuthorize("hasAuthority('I-3')")
     public RS getMouthStatisticsColor(@RequestParam(required = false) String time) throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date start = sdf.parse(time);
@@ -159,6 +166,7 @@ public class OrderController {
     }
 
     @GetMapping("/code")
+    @PreAuthorize("hasAuthority('I-3')")
     public RS getByCode(@RequestParam(required = false) String code) {
         List<Map<String, String>> list = this.dao.getByCode(code).stream().map(item -> {
             Map<String, String> map = new HashMap<>();
@@ -170,6 +178,7 @@ public class OrderController {
     }
 
     @GetMapping("/id")
+    @PreAuthorize("hasAuthority('I-3')")
     public RS getById(@RequestParam(required = true) String id) {
         OrderAo ao = new OrderAo();
         OrderDo doo = this.dao.getById(id);
@@ -178,6 +187,7 @@ public class OrderController {
     }
 
     @PostMapping("/excel")
+    @PreAuthorize("hasAuthority('I-3')")
     public void download(HttpServletResponse response,@RequestBody OrderExcelAo orderAo) throws Exception{
         response.setContentType("application/vnd.ms-excel");
         response.setCharacterEncoding("utf-8");

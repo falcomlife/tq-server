@@ -21,6 +21,7 @@ import io.ebean.SqlRow;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.lang.model.type.UnionType;
@@ -43,6 +44,7 @@ public class InStorageController {
     private DictController dictController;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('I-1')")
     public RS getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
         List<SqlRow> list = this.dao.getByPage(pageIndex, pageSize, customerNameItem, code, starttime, endtime);
         int totleRowCount = this.dao.getCountByPage(pageIndex, pageSize, customerNameItem, code, starttime, endtime);
@@ -86,6 +88,7 @@ public class InStorageController {
      * @date: 2023/5/4
      */
     @PostMapping("/ids")
+    @PreAuthorize("hasAuthority('I-1')")
     public RS getByIds(@RequestBody List<String> ids) {
         StringBuffer idssb = new StringBuffer();
         for (String id : ids) {
@@ -127,6 +130,7 @@ public class InStorageController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('I-1')")
     public RS save(@RequestBody InStorageAo inStorageAo) {
         InStorageDo doo = new InStorageDo();
         BeanUtils.copyProperties(inStorageAo, doo);
@@ -146,6 +150,7 @@ public class InStorageController {
     }
 
     @PutMapping
+    @PreAuthorize("hasAuthority('I-1')")
     public RS update(@RequestBody InStorageAo inStorageAo) {
         InStorageDo doo = new InStorageDo();
         BeanUtils.copyProperties(inStorageAo, doo);
@@ -159,6 +164,7 @@ public class InStorageController {
     }
 
     @DeleteMapping
+    @PreAuthorize("hasAuthority('I-1')")
     public RS delete(@RequestBody List<String> ids) {
         List<InStorageDo> list = this.dao.getByIds(ids);
         for (InStorageDo doo : list) {
@@ -169,6 +175,7 @@ public class InStorageController {
     }
 
     @GetMapping("/statistics")
+    @PreAuthorize("hasAuthority('I-1')")
     public RS getMouthStatistics(@RequestParam(required = false) String time) throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date start = sdf.parse(time);
@@ -181,6 +188,7 @@ public class InStorageController {
     }
 
     @GetMapping("/statistics/reratio")
+    @PreAuthorize("hasAuthority('I-1')")
     public RS getMouthStatisticsReratio(@RequestParam(required = false) String time) throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         Date start = sdf.parse(time);
@@ -213,6 +221,7 @@ public class InStorageController {
     }
 
     @GetMapping("/code")
+    @PreAuthorize("hasAuthority('I-1')")
     public RS getByCode(@RequestParam(required = false) String code) {
         List<Map<String, String>> list = this.dao.getByCode(code).stream().map(item -> {
             Map<String, String> map = new HashMap<>();
@@ -224,6 +233,7 @@ public class InStorageController {
     }
 
     @GetMapping("/id")
+    @PreAuthorize("hasAuthority('I-1')")
     public RS getById(@RequestParam(required = true) String id) {
         InStorageAo iao = new InStorageAo();
         InStorageDo idoo = this.dao.getById(id);
@@ -244,6 +254,7 @@ public class InStorageController {
     }
 
     @GetMapping("/order")
+    @PreAuthorize("hasAuthority('I-1')")
     public RS getByOrderId(@RequestParam String orderId) {
         return RS.ok(this.dao.getByOrderId(orderId).stream().map(item -> {
             InStorageAo aoInner = new InStorageAo();
@@ -274,6 +285,7 @@ public class InStorageController {
     }
 
     @GetMapping("/outStorage")
+    @PreAuthorize("hasAuthority('I-1')")
     public RS getByOutStorageId(@RequestParam String outStorageId) {
         return RS.ok(this.dao.getByOutStorageId(outStorageId).stream().map(item -> {
             InStorageAo aoInner = new InStorageAo();

@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,6 +36,7 @@ public class OutStorageController {
     private String path;
 
     @GetMapping
+    @PreAuthorize("hasAuthority('I-4')")
     public RS getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
         List<SqlRow> list = this.dao.getByPage(pageIndex, pageSize,customerNameItem,code, starttime, endtime);
         Integer totleRowCount = this.dao.getCountByPage(pageIndex, pageSize,customerNameItem,code, starttime, endtime);
@@ -68,6 +70,7 @@ public class OutStorageController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('I-4')")
     public RS save(@RequestBody OutStorageAo outStorageAo) {
         OutStorageDo doo = new OutStorageDo();
         BeanUtils.copyProperties(outStorageAo, doo);
@@ -87,6 +90,7 @@ public class OutStorageController {
     }
 
     @PutMapping
+    @PreAuthorize("hasAuthority('I-4')")
     public RS update(@RequestBody OutStorageAo outStorageAo) {
         OutStorageDo doo = new OutStorageDo();
         BeanUtils.copyProperties(outStorageAo, doo);
@@ -96,6 +100,7 @@ public class OutStorageController {
     }
 
     @DeleteMapping
+    @PreAuthorize("hasAuthority('I-4')")
     public RS delete(@RequestBody List<String> ids) {
         List<OutStorageDo> list = Ebean.createQuery(OutStorageDo.class).where().idIn(ids).findList();
         for (OutStorageDo doo : list) {
@@ -106,6 +111,7 @@ public class OutStorageController {
     }
 
     @PostMapping("/image")
+    @PreAuthorize("hasAuthority('I-4')")
     public RS upload(MultipartFile file) throws IOException {
         String originFilename = file.getOriginalFilename();
         String suffixName = originFilename.substring(originFilename.lastIndexOf('.'));
@@ -115,6 +121,7 @@ public class OutStorageController {
     }
 
     @GetMapping("/code")
+    @PreAuthorize("hasAuthority('I-4')")
     public RS getByCode(@RequestParam(required = false) String code,@RequestParam(required = false) String orderId,@RequestParam(required = false) String item) {
         List<Map<String, String>> listaor = this.dao.getByCode(code,orderId,item).stream().map(iitem -> {
             Map<String, String> map = new HashMap<>();
@@ -126,6 +133,7 @@ public class OutStorageController {
     }
 
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('I-4')")
     public RS getListByInStorage(@RequestParam String inStorageId) {
         return RS.ok(this.dao.getByInStorageId(inStorageId).stream().map(item -> {
             OutStorageAo aoInner = new OutStorageAo();
@@ -136,6 +144,7 @@ public class OutStorageController {
     }
 
     @GetMapping("/one")
+    @PreAuthorize("hasAuthority('I-4')")
     public RS getOneByInStorage(@RequestParam String outStorageId) {
         return RS.ok(this.dao.getById(outStorageId).stream().map(item -> {
             OutStorageAo aoInner = new OutStorageAo();

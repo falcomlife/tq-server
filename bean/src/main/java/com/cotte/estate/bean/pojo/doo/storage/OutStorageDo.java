@@ -20,7 +20,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-@Table(name="out_storage")
+@Table(name="b_out_storage")
 public class OutStorageDo {
     @Id
     @GeneratedValue(generator="uuidGenerator")

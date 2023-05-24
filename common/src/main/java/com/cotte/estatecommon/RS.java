@@ -1,5 +1,7 @@
 package com.cotte.estatecommon;
 
+import com.cotte.estatecommon.enums.ErrorCode;
+
 /**
  * @ClassName RS
  * @description: 后端返回前端的统一实体类
@@ -10,6 +12,8 @@ public class RS {
     private int s;
 
     private Object rs;
+
+    private ErrorCode code;
 
     public int getS() {
         return s;
@@ -25,6 +29,14 @@ public class RS {
 
     public void setRs(Object rs) {
         this.rs = rs;
+    }
+
+    public int getCode() {
+        return this.code.getIndex();
+    }
+
+    public void setCode(ErrorCode code) {
+        this.code = code;
     }
 
 

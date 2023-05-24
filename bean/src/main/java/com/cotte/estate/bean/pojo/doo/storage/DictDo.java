@@ -16,7 +16,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-@Table(name="dict")
+@Table(name="s_dict")
 @Data
 public class DictDo {
 

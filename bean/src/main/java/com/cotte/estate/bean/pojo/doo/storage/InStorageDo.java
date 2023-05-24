@@ -21,7 +21,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-@Table(name="in_storage")
+@Table(name="b_in_storage")
 public class InStorageDo {
     @Id
     @GeneratedValue(generator="uuidGenerator")

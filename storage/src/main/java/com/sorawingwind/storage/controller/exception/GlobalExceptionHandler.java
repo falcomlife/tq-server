@@ -2,10 +2,12 @@ package com.sorawingwind.storage.controller.exception;
 
 import com.cotte.estatecommon.RS;
 import com.cotte.estatecommon.exception.DeletingObjectIsUsedException;
+import com.cotte.estatecommon.exception.EmptyTokenException;
 import com.cotte.estatecommon.exception.FeignCalldException;
 import com.cotte.estatecommon.exception.ObjectExsitException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,10 +20,10 @@ import javax.servlet.http.HttpServletResponse;
 public class GlobalExceptionHandler {
 
     @ResponseBody
-    @ExceptionHandler(Exception.class)
-    public RS globalException(HttpServletResponse response, Exception e) {
-        log.error("ERROR MESSAGE: 未定义系统异常\n{}", ExceptionUtils.getFullStackTrace(e));
-        return RS.bad("服务器处理异常。");
+    @ExceptionHandler(AccessDeniedException.class)
+    public RS accessDeniedException(HttpServletResponse response, AccessDeniedException e) {
+        log.error("ERROR MESSAGE: 权限不足\n{}", ExceptionUtils.getFullStackTrace(e));
+        return RS.bad("权限不足。");
     }
 
     @ResponseBody
@@ -51,5 +53,12 @@ public class GlobalExceptionHandler {
         log.error("ERROR MESSAGE: {}\n{}", e.getMessage(), ExceptionUtils.getFullStackTrace(e));
         System.out.println(e.getBindingResult().getAllErrors().get(0).getDefaultMessage());
         return RS.bad("您所提交的”"+e.getBindingResult().getAllErrors().get(0).getDefaultMessage()+"“参数数据异常。");
+    }
+
+    @ResponseBody
+    @ExceptionHandler(Exception.class)
+    public RS globalException(HttpServletResponse response, Exception e) {
+        log.error("ERROR MESSAGE: 未定义系统异常\n{}", ExceptionUtils.getFullStackTrace(e));
+        return RS.bad("服务器处理异常。");
     }
 }

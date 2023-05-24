@@ -13,6 +13,7 @@ import io.ebean.Ebean;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,12 +26,14 @@ public class DictController {
     private DictDao dao;
 
     @GetMapping("/items")
+    @PreAuthorize("hasAuthority('I-2')")
     public RS getDictByType(@RequestParam String type) {
         return this.dao.getDictByType(type);
 
     }
 
     @PostMapping("/item")
+    @PreAuthorize("hasAuthority('I-2')")
     public RS save(@RequestBody DictAo ao) {
         ao.setId(UUIDUtil.simpleUUid());
         ao.setItem(UUIDUtil.simpleUUid());
