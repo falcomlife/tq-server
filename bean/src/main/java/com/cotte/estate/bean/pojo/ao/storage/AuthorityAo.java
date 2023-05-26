@@ -1,4 +1,4 @@
-package com.cotte.estate.bean.pojo.doo.storage;
+package com.cotte.estate.bean.pojo.ao.storage;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
@@ -14,29 +14,21 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder(toBuilder = true)
-@Table(name = "s_authority")
-public class AuthorityDo {
+public class AuthorityAo {
     @Id
     @GeneratedValue(generator="uuidGenerator")
     private String id;
-    @Column(name = "name")
     private String name;
-    @Column(name = "type")
     private Integer type;
-    @Column(name = "code")
     private String code;
-    @Column(name = "user")
     private Integer user;
-    @Column(name = "is_enable")
     private Boolean isEnable;
+    private Boolean inRole;
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @Column(name = "create_time")
     private Date createTime;
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
-    @Column(name = "modified_time")
     private Date modifiedTime;
-    @Column(name = "is_delete")
     private Boolean isDelete;
 }

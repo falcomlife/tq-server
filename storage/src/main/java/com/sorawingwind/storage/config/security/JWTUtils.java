@@ -27,7 +27,7 @@ public class JWTUtils {
         }
         Calendar instance = Calendar.getInstance();
         //过期时间设为7天
-        instance.add(Calendar.MINUTE,1);
+        instance.add(Calendar.DATE,EXPIRITION_DAY);
         String token = JWT.create()
                 .withArrayClaim("authorities",authorityList.toArray(new String[0]))
                 .withClaim("username",username)

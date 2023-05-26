@@ -29,19 +29,23 @@ public class GlobalErrorController extends BasicErrorController {
     public ResponseEntity<Map<String, Object>> error(HttpServletRequest request) {
         Map<String, Object> body = getErrorAttributes(request, ErrorAttributeOptions.of(ErrorAttributeOptions.Include.EXCEPTION, ErrorAttributeOptions.Include.MESSAGE, ErrorAttributeOptions.Include.STACK_TRACE, ErrorAttributeOptions.Include.BINDING_ERRORS));
         try {
-            Class exceptionClass = Class.forName((String) body.get("exception"));
-            if (exceptionClass.equals(EmptyTokenException.class)) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("s", 2);
-                map.put("rs", body.get("message"));
-                map.put("code", ErrorCode.EMPTYTOKEN.getIndex());
-                return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
-            } else if (exceptionClass.equals(TokenExpiredException.class)) {
-                Map<String, Object> map = new HashMap<>();
-                map.put("s", 2);
-                map.put("rs", body.get("message"));
-                map.put("code", ErrorCode.TOKENEXPIRED.getIndex());
-                return new ResponseEntity<>(map, HttpStatus.FORBIDDEN);
+            if (body.get("exception") != null) {
+                Class exceptionClass = Class.forName((String) body.get("exception"));
+                if (exceptionClass.equals(EmptyTokenException.class)) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("s", 2);
+                    map.put("rs", body.get("message"));
+                    map.put("code", ErrorCode.EMPTYTOKEN.getIndex());
+                    return new ResponseEntity<>(map, HttpStatus.UNAUTHORIZED);
+                } else if (exceptionClass.equals(TokenExpiredException.class)) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("s", 2);
+                    map.put("rs", body.get("message"));
+                    map.put("code", ErrorCode.TOKENEXPIRED.getIndex());
+                    return new ResponseEntity<>(map, HttpStatus.FORBIDDEN);
+                }
+            } else {
+                return super.error(request);
             }
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);

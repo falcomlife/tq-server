@@ -1,8 +1,13 @@
 package com.cotte.estatecommon.enums;
 
 public enum ErrorCode {
-    TOKENEXPIRED("token过期", 100), EMPTYTOKEN("token为空", 101);
 
+    SUCCESS("成功",100),
+    FAIL("失败",101),
+    WARNING("警告",102),
+    EMPTYTOKEN("token为空", 150),
+    TOKENEXPIRED("token过期", 151),
+    ACCESSDENIED("不允许访问", 152);
 
     private String name;
     private int index;

@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletResponse;
 
+import static com.cotte.estatecommon.enums.ErrorCode.ACCESSDENIED;
+
 @Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -23,7 +25,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public RS accessDeniedException(HttpServletResponse response, AccessDeniedException e) {
         log.error("ERROR MESSAGE: 权限不足\n{}", ExceptionUtils.getFullStackTrace(e));
-        return RS.bad("权限不足。");
+        RS rs = RS.bad(e.getMessage());
+        rs.setCode(ACCESSDENIED);
+        return rs;
     }
 
     @ResponseBody

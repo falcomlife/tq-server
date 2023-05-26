@@ -2,6 +2,9 @@ package com.cotte.estatecommon;
 
 import com.cotte.estatecommon.enums.ErrorCode;
 
+import static com.cotte.estatecommon.enums.ErrorCode.FAIL;
+import static com.cotte.estatecommon.enums.ErrorCode.SUCCESS;
+
 /**
  * @ClassName RS
  * @description: 后端返回前端的统一实体类
@@ -47,6 +50,7 @@ public class RS {
 
     public static RS ok(Object o) {
         RS rs = new RS();
+        rs.setCode(SUCCESS);
         rs.setS(0);
         rs.setRs(o);
         return rs;
@@ -54,6 +58,7 @@ public class RS {
 
     public static RS bad(Object o) {
         RS rs = new RS();
+        rs.setCode(FAIL);
         rs.setS(1);
         rs.setRs(o);
         return rs;
@@ -68,6 +73,7 @@ public class RS {
 
     public static RS ok() {
         RS rs = new RS();
+        rs.setCode(SUCCESS);
         rs.setS(0);
         rs.setRs(null);
         return rs;

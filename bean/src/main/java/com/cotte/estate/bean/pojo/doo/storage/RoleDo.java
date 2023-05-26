@@ -21,6 +21,8 @@ public class RoleDo {
     private String id;
     @Column(name = "name")
     private String name;
+    @Column(name = "company_id")
+    private String companyId;
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "create_time")

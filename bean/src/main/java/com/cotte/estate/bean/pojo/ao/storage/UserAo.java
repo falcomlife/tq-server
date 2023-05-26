@@ -18,6 +18,7 @@ public class UserAo {
 
     private String id;
     private String companyId;
+    private String companyCode;
     private String name;
     private String account;
     private String password;

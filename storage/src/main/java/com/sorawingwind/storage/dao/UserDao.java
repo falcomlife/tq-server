@@ -1,5 +1,6 @@
 package com.sorawingwind.storage.dao;
 
+import com.cotte.estate.bean.pojo.ao.storage.UserAo;
 import com.cotte.estate.bean.pojo.doo.storage.AuthorityDo;
 import com.cotte.estate.bean.pojo.doo.storage.CompanyDo;
 import com.cotte.estate.bean.pojo.doo.storage.RoleDo;
@@ -7,6 +8,7 @@ import com.cotte.estate.bean.pojo.doo.storage.UserDo;
 import com.cotte.estate.bean.pojo.dto.UserAuthenticationDto;
 import io.ebean.Ebean;
 import io.ebean.SqlRow;
+import io.ebean.Update;
 import org.springframework.stereotype.Repository;
 
 import javax.management.relation.Role;
@@ -56,5 +58,17 @@ public class UserDao {
 
     public void save(UserDo userDo) {
         Ebean.save(userDo);
+    }
+
+    public UserDo getByAccount(String account) {
+        return Ebean.createQuery(UserDo.class).where().eq("account",account).findOne();
+    }
+
+    public void rebackPassword(UserDo userDo) {
+        String updStatement = "update s_user set password = :password where id = :id";
+        Update<UserDo> update = Ebean.createUpdate(UserDo.class, updStatement);
+        update.set("password", userDo.getPassword());
+        update.set("id", userDo.getId());
+        update.execute();
     }
 }
