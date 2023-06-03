@@ -8,7 +8,7 @@ spring:
     password: bnsbdlmysql
   web:
     resources:
-      static-locations: classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/,classpath:/admin/,classpath:/customer/,file:/opt/storage/images/
+      static-locations: classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/,classpath:/admin/,classpath:/customer/,file:/opt/storage/
 okhttp:
   connectTimeout: 30
   readTimeout: 30

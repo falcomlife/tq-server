@@ -31,7 +31,7 @@ public class UserDetailServiceImpl implements UserDetailsService, UserDetailsPas
         }
         UserDetailsImpl userdetails = new UserDetailsImpl();
         userdetails.setId(user.getId());
-        userdetails.setUsername(user.getUsername());
+        userdetails.setUsername(user.getAccount()+"/"+user.getUsername()+"/"+user.getId());
         userdetails.setPassword(user.getPassword());
         userdetails.setAuthorities(user.getAuthoritys());
         userdetails.setAccountNonLocked(true);

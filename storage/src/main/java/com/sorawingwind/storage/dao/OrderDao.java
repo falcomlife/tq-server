@@ -95,7 +95,7 @@ public class OrderDao {
     }
 
     public List<SqlRow> getCountBetweenTimesWithColor(String startStr, String endStr) {
-        return Ebean.createSqlQuery("select color,sum( `sum` ) as count from `b_order` where create_time >= :start and create_time <= :end and is_delete = 0 GROUP BY color order by count desc").setParameter("start", startStr).setParameter("end", endStr).findList();
+        return Ebean.createSqlQuery("select color,sum( `sum` ) as count from `b_order` where sum is not null and create_time >= :start and create_time <= :end and is_delete = 0 GROUP BY color order by count asc").setParameter("start", startStr).setParameter("end", endStr).findList();
     }
 
     public List<OrderDo> getByCode(String code) {

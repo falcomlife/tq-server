@@ -25,6 +25,8 @@ public class UserDo {
     private String name;
     @Column(name = "account")
     private String account;
+    @Column(name = "code")
+    private String code;
     @Column(name = "password")
     private String password;
     @Column(name = "is_lock")

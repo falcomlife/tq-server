@@ -2,8 +2,7 @@ package com.cotte.estatecommon;
 
 import com.cotte.estatecommon.enums.ErrorCode;
 
-import static com.cotte.estatecommon.enums.ErrorCode.FAIL;
-import static com.cotte.estatecommon.enums.ErrorCode.SUCCESS;
+import static com.cotte.estatecommon.enums.ErrorCode.*;
 
 /**
  * @ClassName RS
@@ -83,6 +82,7 @@ public class RS {
         RS rs = new RS();
         rs.setS(2);
         rs.setRs(o);
+        rs.setCode(WARNING);
         return rs;
     }
 

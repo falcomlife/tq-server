@@ -3,12 +3,12 @@ spring:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
     druid:
-    url: jdbc:mysql://localhost:3306/tq?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://172.21.16.9:3306/tq?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
-    password: bnsbdlmysql
+    password: 1234+ABcd
   web:
     resources:
-      static-locations: classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/,classpath:/admin/,classpath:/customer/,file:D:\storage\images\
+      static-locations: classpath:/META-INF/resources/,classpath:/resources/,classpath:/static/,classpath:/public/,classpath:/admin/,classpath:/customer/,file:/opt/tq/files
 okhttp:
   connectTimeout: 30
   readTimeout: 30
@@ -17,4 +17,4 @@ okhttp:
   keepAliveDuration: 300 # 连接空闲时间最多为 300 秒
 project:
   file:
-    path: D:\storage\images\
+    path: /opt/tq/files/images/

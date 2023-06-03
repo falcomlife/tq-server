@@ -18,11 +18,16 @@ public class UserAo {
 
     private String id;
     private String companyId;
+    private String roleId;
     private String companyCode;
     private String name;
+    private String code;
     private String account;
     private String password;
+    private String newPassword;
     private Boolean isLock;
+    private String isLockName;
+    private Boolean roleFlag;
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;

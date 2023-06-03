@@ -30,6 +30,12 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         //从请求头中获取token
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
+        if(uri.startsWith("/images/") || uri.startsWith("/web/") || uri.equals("/outStorage/image") || uri.equals("/favicon.ico") || (uri.equals("/user") && method.equals("POST"))){
+            chain.doFilter(request,response);
+            return;
+        }
         String token = request.getHeader(JWTUtils.TOKEN_HEADER);
         if(StringUtils.isBlank(token)){
             throw new EmptyTokenException("请求凭证为空，请重新登录。");

@@ -39,20 +39,20 @@ public class OutStorageDao {
         sb.append(" from b_out_storage ot ");
         sb.append(" left join b_in_storage i on ot.in_storage_id = i.id");
         sb.append(" left join `b_order` o on o.id = i.order_id");
-        sb.append("  where ot.is_delete = 0  ");
+        sb.append(" where ot.is_delete = 0 ");
         if (StringUtils.isNotBlank(customerNameItem)) {
             sb.append(" and o.customer_name = :customerNameItem ");
         }
         if (StringUtils.isNotBlank(starttime)) {
-            sb.append(" and i.create_time >= :starttime ");
+            sb.append(" and ot.create_time >= :starttime ");
         }
         if (StringUtils.isNotBlank(endtime)) {
-            sb.append(" and i.create_time <= :endtime ");
+            sb.append(" and ot.create_time <= :endtime ");
         }
         if (StringUtils.isNotBlank(code)) {
             sb.append(" and ot.code like '%" + code + "%' ");
         }
-        sb.append("order by i.create_time desc");
+        sb.append("order by ot.create_time desc");
         SqlQuery sq = Ebean.createSqlQuery(sb.toString()).setParameter("customerNameItem", customerNameItem).setParameter("customer_name_item", customerNameItem).setParameter("starttime", starttime).setParameter("endtime", endtime);
         sq.setFirstRow((pageIndex - 1) * pageSize);
         sq.setMaxRows(pageSize);

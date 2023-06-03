@@ -17,4 +17,4 @@ okhttp:
   keepAliveDuration: 300 # 连接空闲时间最多为 300 秒
 project:
   file:
-    path: /home/sorawingwind/workhome/test/upload/
+    path: /home/sorawingwind/workhome/test/upload/images/

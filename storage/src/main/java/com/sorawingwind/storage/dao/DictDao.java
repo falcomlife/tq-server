@@ -15,10 +15,13 @@ import java.util.List;
 @Repository
 public class DictDao {
 
-    public RS getDictByType(@RequestParam String type) {
+    public RS getDictByType(String type) {
         List<DictDo> dictdo = Ebean.createQuery(DictDo.class).where().eq("type", type).findList();
         return RS.ok(new ListUtil<DictDo, DictAo>().copyList(dictdo, DictAo.class));
+    }
 
+    public List<DictDo> getDictDoByType(String type) {
+        return Ebean.createQuery(DictDo.class).where().eq("type", type).findList();
     }
 
     public void save(DictDo doo) {

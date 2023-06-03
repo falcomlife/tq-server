@@ -1,5 +1,6 @@
 package com.sorawingwind.storage.dao;
 
+import com.cotte.estate.bean.pojo.doo.storage.AuthorityDo;
 import com.cotte.estate.bean.pojo.doo.storage.RoleDo;
 import com.cotte.estate.bean.pojo.doo.storage.RoleDo;
 import io.ebean.Ebean;
@@ -10,20 +11,21 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository
 public class RoleDao {
 
-    public RoleDo getById(String id){
-        return Ebean.createQuery(RoleDo .class).where().idEq(id).findOne();
+    public RoleDo getById(String id) {
+        return Ebean.createQuery(RoleDo.class).where().idEq(id).findOne();
     }
 
     public List<RoleDo> getByPage(int pageIndex, int pageSize, String name, String companyId) {
         ExpressionList<RoleDo> el = Ebean.createQuery(RoleDo.class).where();
         if (StringUtils.isNotBlank(name)) {
-            el.like("name", "%"+name+"%");
+            el.like("name", "%" + name + "%");
         }
-        el.eq("company_id",companyId);
+        el.eq("company_id", companyId);
         el.eq("is_delete", false);
         el.setFirstRow((pageIndex - 1) * pageSize);
         el.setMaxRows(pageSize);
@@ -35,9 +37,9 @@ public class RoleDao {
     public int getCountByPage(String name, String companyId) {
         ExpressionList<RoleDo> el = Ebean.createQuery(RoleDo.class).where();
         if (StringUtils.isNotBlank(name)) {
-            el.like("name", "%"+name+"%");
+            el.like("name", "%" + name + "%");
         }
-        el.eq("company_id",companyId);
+        el.eq("company_id", companyId);
         el.eq("is_delete", false);
         return el.findCount();
     }
@@ -54,49 +56,37 @@ public class RoleDao {
         Ebean.updateAll(list);
     }
 
-    public Integer getCountBetweenTimes(Date start, Date end) {
-        return Ebean.createQuery(RoleDo.class).where().ge("create_time", start).lt("create_time", end).findCount();
-    }
-
-    public List<SqlRow> getCountBetweenTimesWithColor(String startStr, String endStr) {
-        return Ebean.createSqlQuery("select color,sum( `sum` ) as count from `b_order` where create_time >= :start and create_time <= :end and is_delete = 0 GROUP BY color order by count desc").setParameter("start", startStr).setParameter("end", endStr).findList();
-    }
-
-    public List<RoleDo> getByCode(String code) {
-        return Ebean.createQuery(RoleDo.class).where().like("code", "%" + code + "%").eq("is_delete", false).findList();
-    }
-
-    public List<RoleDo> getExcels(String customerNameItem, String code, String po, String item, String starttime, String endtime) {
-        ExpressionList<RoleDo> el = Ebean.createQuery(RoleDo.class).where();
-        if (StringUtils.isNotBlank(customerNameItem)) {
-            el.eq("customer_name", customerNameItem);
-        }
-        if (StringUtils.isNotBlank(starttime)) {
-            el.ge("create_time", starttime);
-        }
-        if (StringUtils.isNotBlank(endtime)) {
-            el.le("create_time", endtime);
-        }
-        if (StringUtils.isNotBlank(code)) {
-            el.like("code", "%" + code + "%");
-        }
-        if (StringUtils.isNotBlank(po)) {
-            el.like("po_num", "%" + po + "%");
-        }
-        if (StringUtils.isNotBlank(item)) {
-            el.like("item", "%" + item + "%");
-        }
-        el.eq("is_delete", false);
-        List<RoleDo> list = null;
-        if (StringUtils.isBlank(customerNameItem)) {
-            list = el.order("create_time desc").findList();
-        } else {
-            list = el.order("po_num desc, create_time desc").findList();
-        }
-        return list;
-    }
-
     public void saveAuthority(String id, String authorityId) {
-        Ebean.createSqlUpdate("insert into r_role_authority (role_id,authority_id) values (:roleId,:authorityId)").setParameter("roleId",id).setParameter("authorityId",authorityId).execute();
+        Ebean.createSqlUpdate("insert into r_role_authority (role_id,authority_id) values (:roleId,:authorityId)").setParameter("roleId", id).setParameter("authorityId", authorityId).execute();
+    }
+
+
+    public List<RoleDo> getAll() {
+        return Ebean.createQuery(RoleDo.class).where().eq("is_delete", false).findList();
+    }
+
+    public List<RoleDo> getRoleAuthority(String userId) {
+        StringBuffer sb = new StringBuffer();
+        sb.append(" select ");
+        sb.append(" * ");
+        sb.append(" from s_role r ");
+        sb.append(" left join r_user_role ru ");
+        sb.append(" on r.id = ru.role_id ");
+        sb.append(" where ru.user_id = :userId ");
+        sb.append(" and r.is_delete = false ");
+        return Ebean.createSqlQuery(sb.toString()).setParameter("userId", userId).findList().stream().map(item -> {
+            RoleDo roleDo = new RoleDo();
+            roleDo.setId(item.getString("id"));
+            roleDo.setName(item.getString("name"));
+            roleDo.setCompanyId(item.getString("company_id"));
+            roleDo.setCreateTime(item.getDate("create_time"));
+            roleDo.setModifiedTime(item.getDate("modified_time"));
+            roleDo.setIsDelete(item.getBoolean("is_delete"));
+            return roleDo;
+        }).collect(Collectors.toList());
+    }
+
+    public void deleteAuthority(String id, String authorityId) {
+        Ebean.createSqlUpdate("delete from r_role_authority where role_id = :roleId and authority_id = :authorityId").setParameter("roleId", id).setParameter("authorityId", authorityId).execute();
     }
 }

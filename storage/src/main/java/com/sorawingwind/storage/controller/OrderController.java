@@ -5,6 +5,7 @@ import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.write.metadata.WriteSheet;
 import com.cotte.estate.bean.pojo.ao.storage.OrderAo;
 import com.cotte.estate.bean.pojo.ao.storage.OrderExcelAo;
+import com.cotte.estate.bean.pojo.doo.storage.DictDo;
 import com.cotte.estate.bean.pojo.doo.storage.InStorageDo;
 import com.cotte.estate.bean.pojo.doo.storage.OrderDo;
 import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
@@ -18,6 +19,7 @@ import com.cotte.estatecommon.utils.UUIDUtil;
 import com.cotte.estatecommon.enums.OutType;
 import com.sorawingwind.storage.dao.OrderDao;
 import io.ebean.Ebean;
+import io.ebean.SqlRow;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -46,8 +48,12 @@ public class OrderController {
     @GetMapping
     @PreAuthorize("hasAuthority('I-3')")
     public RS getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String po, @RequestParam(required = false) String item, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
-        List<OrderDo> list = this.dao.getByPage(pageIndex, pageSize, customerNameItem, code, po, item,starttime, endtime);
-        int totleRowCount = this.dao.getCountByPage(pageIndex, pageSize, customerNameItem, code, po, item,starttime, endtime);
+        List<OrderDo> list = this.dao.getByPage(pageIndex, pageSize, customerNameItem, code, po, item, starttime, endtime);
+        int totleRowCount = this.dao.getCountByPage(pageIndex, pageSize, customerNameItem, code, po, item, starttime, endtime);
+
+        List<DictDo> customerDicts = this.dictController.getDictDoByType("customer");
+        List<DictDo> colorDicts = this.dictController.getDictDoByType("color");
+
         List<OrderAo> listao = new ListUtil<OrderDo, OrderAo>().copyList(list, OrderAo.class);
         List<String> orderIds = listao.stream().map(OrderAo::getId).collect(Collectors.toList());
         List<InStorageDo> listIn = new ArrayList<>();
@@ -76,9 +82,9 @@ public class OrderController {
             aoInner.setReplatCount(replat);
             aoInner.setIncomingCount(incomingErr);
             aoInner.setPartSumCountCal(inStorageSumCountCal);
-            aoInner.setCustomerName(dictController.getById(oitem.getCustomerName()).getItemName());
+            aoInner.setCustomerName(customerDicts.stream().filter(dict -> dict.getId().equals(oitem.getCustomerName())).findFirst().get().getItemName());
             aoInner.setCustomerNameId(oitem.getCustomerName());
-            aoInner.setColor(dictController.getById(oitem.getColor()).getItemName());
+            aoInner.setColor(colorDicts.stream().filter(dict -> dict.getId().equals(oitem.getColor())).findFirst().get().getItemName());
             aoInner.setColorId(oitem.getColor());
             listaor.add(aoInner);
         }
@@ -138,7 +144,7 @@ public class OrderController {
         calendar.add(calendar.MONTH, 1);
         calendar.set(Calendar.DAY_OF_MONTH, 1);
         Date end = calendar.getTime();
-        return RS.ok(this.dao.getCountBetweenTimes(start,end));
+        return RS.ok(this.dao.getCountBetweenTimes(start, end));
 //        }
     }
 
@@ -154,15 +160,26 @@ public class OrderController {
         Date end = calendar.getTime();
         String startStr = sdf.format(start);
         String endStr = sdf.format(end);
-        return RS.ok(this.dao.getCountBetweenTimesWithColor(startStr,endStr).stream().map(item -> {
-            String colorid = item.getString("color");
-            String count = item.getString("count");
-            String color = dictController.getById(colorid).getItemName();
-            Map<String, String> map = new HashMap<>();
-            map.put("color", color);
-            map.put("count", count);
-            return map;
-        }).collect(Collectors.toList()));
+        List<SqlRow> list = this.dao.getCountBetweenTimesWithColor(startStr, endStr);
+        if (!list.isEmpty()) {
+            Double maxsum = list.stream().mapToDouble(sqlrow -> sqlrow.getDouble("count")).sum();
+            return RS.ok(list.stream().map(item -> {
+                String colorid = item.getString("color");
+                String count = item.getString("count");
+                BigDecimal ratio = BigDecimal.ZERO;
+                if (maxsum != 0.0) {
+                    ratio = item.getBigDecimal("count").divide(new BigDecimal(maxsum), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+                }
+                String color = dictController.getById(colorid).getItemName();
+                Map<String, String> map = new HashMap<>();
+                map.put("color", color);
+                map.put("count", count);
+                map.put("ratio", ratio.toString());
+                return map;
+            }).collect(Collectors.toList()));
+        } else {
+            return RS.warn("未查询到订单数据。");
+        }
     }
 
     @GetMapping("/code")
@@ -188,7 +205,7 @@ public class OrderController {
 
     @PostMapping("/excel")
     @PreAuthorize("hasAuthority('I-3')")
-    public void download(HttpServletResponse response,@RequestBody OrderExcelAo orderAo) throws Exception{
+    public void download(HttpServletResponse response, @RequestBody OrderExcelAo orderAo) throws Exception {
         response.setContentType("application/vnd.ms-excel");
         response.setCharacterEncoding("utf-8");
         String fileName = URLEncoder.encode("订单明细", "UTF-8");
@@ -202,13 +219,13 @@ public class OrderController {
             iitem.setColor(dictController.getById(iitem.getColor()).getItemName());
             return iitem;
         }).collect(Collectors.toList());
-        List<OrderEto> listeto = new ListUtil<OrderDo,OrderEto>().copyList(listdo,OrderEto.class);
+        List<OrderEto> listeto = new ListUtil<OrderDo, OrderEto>().copyList(listdo, OrderEto.class);
         // 获取模板路径
         InputStream resourceAsStream = this.getClass().getResourceAsStream("/excel/order.xlsx");
         // 创建输出的excel对象
         final ExcelWriter write = EasyExcel.write(outputStream).withTemplate(resourceAsStream).build();
         // 创建第一个sheel页
-        final WriteSheet sheet1 = EasyExcel.writerSheet(0,"订单明细").build();
+        final WriteSheet sheet1 = EasyExcel.writerSheet(0, "订单明细").build();
         write.fill(listeto, sheet1);
         // 关闭流
         write.finish();

@@ -1,6 +1,7 @@
 package com.sorawingwind.storage.controller;
 
 import com.cotte.estate.bean.pojo.ao.storage.OutStorageAo;
+import com.cotte.estate.bean.pojo.doo.storage.DictDo;
 import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
 import com.cotte.estatecommon.PageRS;
 import com.cotte.estatecommon.RS;
@@ -40,6 +41,11 @@ public class OutStorageController {
     public RS getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
         List<SqlRow> list = this.dao.getByPage(pageIndex, pageSize,customerNameItem,code, starttime, endtime);
         Integer totleRowCount = this.dao.getCountByPage(pageIndex, pageSize,customerNameItem,code, starttime, endtime);
+
+        List<DictDo> customerDicts = this.dictController.getDictDoByType("customer");
+        List<DictDo> colorDicts = this.dictController.getDictDoByType("color");
+        List<DictDo> ctDicts = this.dictController.getDictDoByType("ct");
+
         List<OutStorageAo> listaor = list.stream().map(item -> {
             OutStorageAo aoInner = new OutStorageAo();
             aoInner.setId(item.getString("id"));
@@ -55,11 +61,11 @@ public class OutStorageController {
             aoInner.setItem(item.getString("item"));
             aoInner.setCount(item.getString("count"));
             aoInner.setIsDelete(0);
-            aoInner.setCustomerName(dictController.getById(item.getString("customer_name")).getItemName());
+            aoInner.setCustomerName(customerDicts.stream().filter(dict -> dict.getId().equals(item.getString("customer_name"))).findFirst().get().getItemName());
             aoInner.setCustomerNameId(item.getString("customer_name"));
-            aoInner.setColor(dictController.getById(item.getString("color")).getItemName());
+            aoInner.setColor(colorDicts.stream().filter(dict -> dict.getId().equals(item.getString("color"))).findFirst().get().getItemName());
             aoInner.setColorId(item.getString("color"));
-            aoInner.setBake(dictController.getById(item.getString("bake")).getItemName());
+            aoInner.setBake(ctDicts.stream().filter(dict -> dict.getId().equals(item.getString("bake"))).findFirst().get().getItemName());
             aoInner.setBakeId(item.getString("bake"));
             aoInner.setOutTypeId(item.getString("out_type"));
             aoInner.setOutType(OutType.getNameByIndex(Integer.parseInt(item.getString("out_type"))));
@@ -111,7 +117,6 @@ public class OutStorageController {
     }
 
     @PostMapping("/image")
-    @PreAuthorize("hasAuthority('I-4')")
     public RS upload(MultipartFile file) throws IOException {
         String originFilename = file.getOriginalFilename();
         String suffixName = originFilename.substring(originFilename.lastIndexOf('.'));

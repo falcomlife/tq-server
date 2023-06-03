@@ -21,6 +21,8 @@ public class RoleAo {
     private String name;
     private String companyId;
     private String authorityId;
+    private Boolean inUser;
+    private Boolean authorityFlag;
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     private Date createTime;

@@ -10,6 +10,7 @@ import com.cotte.estatecommon.utils.ListUtil;
 import com.sorawingwind.storage.dao.AuthorityDao;
 import com.sorawingwind.storage.dao.CompanyDao;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,14 +25,8 @@ public class AuthorityController {
     @Autowired
     private AuthorityDao dao;
 
-//    @GetMapping
-//    public RS getAll() {
-//        List<AuthorityDo> list = this.dao.getAll();
-//        List<AuthorityAo> listaor = new ListUtil<AuthorityDo, AuthorityAo>().copyList(list, AuthorityAo.class);
-//        return RS.ok(listaor);
-//    }
-
     @GetMapping
+    @PreAuthorize("hasAuthority('I-8')")
     public RS getRoleAuthority(String roleId) {
         List<AuthorityDo> list1 = this.dao.getAll();
         List<AuthorityDo> list2 = this.dao.getRoleAuthority(roleId);

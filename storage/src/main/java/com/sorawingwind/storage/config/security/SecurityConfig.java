@@ -51,7 +51,7 @@ public class SecurityConfig {
     @Bean
     protected SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         // 鉴权过滤
-        http.authorizeHttpRequests().antMatchers("/static/**").permitAll()
+        http.authorizeHttpRequests().antMatchers("/static/**","/images/**","/favicon.ico","/web/","/web/**").permitAll()
                 .and().formLogin()
                 // 登出逻辑处理
                 .and().logout().logoutSuccessHandler(new MyLogoutSuccessHandler())

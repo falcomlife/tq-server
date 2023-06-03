@@ -27,7 +27,7 @@ public class MyAuthenticationSuccessHandler implements AuthenticationSuccessHand
             authorityDo.setCode(item.getAuthority());
             return authorityDo;
         }).collect(Collectors.toList());
-        result.put("token", JWTUtils.createToken(username,authorityDos));
+        result.put("token", JWTUtils.createToken(username.split("/")[0],username.split("/")[1],username.split("/")[2],authorityDos));
         response.setContentType("application/json;charset=UTF-8");
         String s = new ObjectMapper().writeValueAsString(result);
         response.getWriter().println(s);

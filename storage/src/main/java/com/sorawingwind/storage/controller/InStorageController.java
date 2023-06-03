@@ -3,6 +3,7 @@ package com.sorawingwind.storage.controller;
 import com.cotte.estate.bean.pojo.ao.storage.InStorageAo;
 import com.cotte.estate.bean.pojo.ao.storage.OrderAo;
 import com.cotte.estate.bean.pojo.ao.storage.OutStorageAo;
+import com.cotte.estate.bean.pojo.doo.storage.DictDo;
 import com.cotte.estate.bean.pojo.doo.storage.InStorageDo;
 import com.cotte.estate.bean.pojo.doo.storage.OrderDo;
 import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
@@ -39,7 +40,6 @@ public class InStorageController {
     private InStorageDao dao;
     @Autowired
     private OrderDao orderDao;
-
     @Autowired
     private DictController dictController;
 
@@ -48,6 +48,10 @@ public class InStorageController {
     public RS getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
         List<SqlRow> list = this.dao.getByPage(pageIndex, pageSize, customerNameItem, code, starttime, endtime);
         int totleRowCount = this.dao.getCountByPage(pageIndex, pageSize, customerNameItem, code, starttime, endtime);
+        List<DictDo> customerDicts = this.dictController.getDictDoByType("customer");
+        List<DictDo> colorDicts = this.dictController.getDictDoByType("color");
+        List<DictDo> incomingtypeDicts = this.dictController.getDictDoByType("incomingtype");
+        List<DictDo> ctDicts = this.dictController.getDictDoByType("ct");
         List<InStorageAo> listaor = list.stream().map(item -> {
             InStorageAo aoInner = new InStorageAo();
             aoInner.setId(item.getString("id"));
@@ -66,16 +70,18 @@ public class InStorageController {
             aoInner.setOrderId(item.getString("order_id"));
             aoInner.setOrderCode(item.getString("order_code"));
             aoInner.setIsDelete(0);
-            aoInner.setCustomerName(dictController.getById(item.getString("customer_name")).getItemName());
+            aoInner.setCustomerName(customerDicts.stream().filter(dict -> dict.getId().equals(item.getString("customer_name"))).findFirst().get().getItemName());
             aoInner.setCustomerNameId(item.getString("customer_name"));
-            aoInner.setColor(dictController.getById(item.getString("color")).getItemName());
+            if(StringUtils.isNotBlank(item.getString("color"))){
+                aoInner.setColor(colorDicts.stream().filter(dict -> dict.getId().equals(item.getString("color"))).findFirst().get().getItemName());
+            }
             aoInner.setColorId(item.getString("color"));
-            aoInner.setOrderColor(dictController.getById(item.getString("order_color")).getItemName());
+            aoInner.setOrderColor(colorDicts.stream().filter(dict -> dict.getId().equals(item.getString("order_color"))).findFirst().get().getItemName());
             aoInner.setOrderColorId(item.getString("order_color"));
-            aoInner.setIncomingType(dictController.getById(item.getString("incoming_type")).getItemName());
+            aoInner.setIncomingType(incomingtypeDicts.stream().filter(dict -> dict.getId().equals(item.getString("incoming_type"))).findFirst().get().getItemName());
             aoInner.setIncomingTypeId(item.getString("incoming_type"));
             aoInner.setIncomingReason(item.getString("incoming_reason"));
-            aoInner.setBake(dictController.getById(item.getString("bake")).getItemName());
+            aoInner.setBake(ctDicts.stream().filter(dict -> dict.getId().equals(item.getString("bake"))).findFirst().get().getItemName());
             aoInner.setBakeId(item.getString("bake"));
             return aoInner;
         }).collect(Collectors.toList());
@@ -90,6 +96,12 @@ public class InStorageController {
     @PostMapping("/ids")
     @PreAuthorize("hasAuthority('I-1')")
     public RS getByIds(@RequestBody List<String> ids) {
+
+        List<DictDo> customerDicts = this.dictController.getDictDoByType("customer");
+        List<DictDo> colorDicts = this.dictController.getDictDoByType("color");
+        List<DictDo> incomingtypeDicts = this.dictController.getDictDoByType("incomingtype");
+        List<DictDo> ctDicts = this.dictController.getDictDoByType("ct");
+
         StringBuffer idssb = new StringBuffer();
         for (String id : ids) {
             idssb.append("\"" + id + "\",");
@@ -113,16 +125,16 @@ public class InStorageController {
             aoInner.setOrderId(item.getString("order_id"));
             aoInner.setOrderCode(item.getString("order_code"));
             aoInner.setIsDelete(0);
-            aoInner.setCustomerName(dictController.getById(item.getString("customer_name")).getItemName());
+            aoInner.setCustomerName(customerDicts.stream().filter(dict -> dict.getId().equals(item.getString("customer_name"))).findFirst().get().getItemName());
             aoInner.setCustomerNameId(item.getString("customer_name"));
-            aoInner.setColor(dictController.getById(item.getString("color")).getItemName());
+            aoInner.setColor(colorDicts.stream().filter(dict -> dict.getId().equals(item.getString("color"))).findFirst().get().getItemName());
             aoInner.setColorId(item.getString("color"));
-            aoInner.setOrderColor(dictController.getById(item.getString("order_color")).getItemName());
+            aoInner.setOrderColor(colorDicts.stream().filter(dict -> dict.getId().equals(item.getString("order_color"))).findFirst().get().getItemName());
             aoInner.setOrderColorId(item.getString("order_color"));
-            aoInner.setIncomingType(dictController.getById(item.getString("incoming_type")).getItemName());
+            aoInner.setIncomingType(incomingtypeDicts.stream().filter(dict -> dict.getId().equals(item.getString("incoming_type"))).findFirst().get().getItemName());
             aoInner.setIncomingTypeId(item.getString("incoming_type"));
             aoInner.setIncomingReason(item.getString("incoming_reason"));
-            aoInner.setBake(dictController.getById(item.getString("bake")).getItemName());
+            aoInner.setBake(ctDicts.stream().filter(dict -> dict.getId().equals(item.getString("bake"))).findFirst().get().getItemName());
             aoInner.setBakeId(item.getString("bake"));
             return aoInner;
         }).collect(Collectors.toList());

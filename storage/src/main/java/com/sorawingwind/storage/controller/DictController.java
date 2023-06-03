@@ -43,6 +43,10 @@ public class DictController {
         return RS.ok();
     }
 
+    public List<DictDo> getDictDoByType(@RequestParam String type) {
+        return this.dao.getDictDoByType(type);
+    }
+
     public DictDo getById(String id) {
         if (StringUtils.isBlank(id)) {
             return new DictDo();

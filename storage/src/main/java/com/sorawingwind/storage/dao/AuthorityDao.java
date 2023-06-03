@@ -30,6 +30,7 @@ public class AuthorityDao {
         sb.append(" where ra.role_id = :roleId ");
         sb.append(" and a.is_delete = false ");
         sb.append(" and a.is_enable = true ");
+        sb.append(" order by a.type asc, a.code asc ");
         return Ebean.createSqlQuery(sb.toString()).setParameter("roleId",roleId).findList().stream().map(item -> {
             AuthorityDo authorityDo = new AuthorityDo();
             authorityDo.setId(item.getString("id"));
