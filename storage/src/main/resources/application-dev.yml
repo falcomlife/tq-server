@@ -1,3 +1,5 @@
+server:
+  port: 8001
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
@@ -18,3 +20,9 @@ okhttp:
 project:
   file:
     path: /home/sorawingwind/workhome/test/upload/images/
+logging:
+  level:
+    io:
+      ebean:
+        SQL: DEBUG
+        TXN: DEBUG

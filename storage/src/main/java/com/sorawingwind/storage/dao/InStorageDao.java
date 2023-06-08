@@ -14,7 +14,7 @@ import java.util.List;
 
 @Repository
 public class InStorageDao {
-    public List<SqlRow> getByPage(int pageIndex, int pageSize, String customerNameItem, String code, String starttime, String endtime) {
+    public List<SqlRow> getByPage(int pageIndex, int pageSize, String customerNameItem, String incomingTypeItem, String code, String starttime, String endtime) {
         StringBuffer sb = new StringBuffer();
         sb.append(" select ");
         sb.append("i.id,");
@@ -44,6 +44,9 @@ public class InStorageDao {
         if (StringUtils.isNotBlank(customerNameItem)) {
             sb.append(" and o.customer_name = :customerNameItem ");
         }
+        if (StringUtils.isNotBlank(incomingTypeItem)) {
+            sb.append(" and i.incoming_type = :incomingTypeItem ");
+        }
         if (StringUtils.isNotBlank(starttime)) {
             sb.append(" and i.create_time >= :starttime ");
         }
@@ -54,20 +57,23 @@ public class InStorageDao {
             sb.append(" and i.code like '%" + code + "%' ");
         }
         sb.append("order by i.create_time desc");
-        SqlQuery sq = Ebean.createSqlQuery(sb.toString()).setParameter("customerNameItem", customerNameItem).setParameter("customer_name_item", customerNameItem).setParameter("starttime", starttime).setParameter("endtime", endtime);
+        SqlQuery sq = Ebean.createSqlQuery(sb.toString()).setParameter("customerNameItem", customerNameItem).setParameter("customer_name_item", customerNameItem).setParameter("starttime", starttime).setParameter("endtime", endtime).setParameter("incomingTypeItem", incomingTypeItem);
         sq.setFirstRow((pageIndex - 1) * pageSize);
         sq.setMaxRows(pageSize);
         List<SqlRow> list = sq.findList();
         return list;
     }
 
-    public int getCountByPage(int pageIndex, int pageSize, String customerNameItem, String code, String starttime, String endtime) {
+    public int getCountByPage(int pageIndex, int pageSize, String customerNameItem, String incomingTypeItem, String code, String starttime, String endtime) {
         StringBuffer sb = new StringBuffer();
         sb.append(" select ");
         sb.append(" count(*) as count");
         sb.append(" from b_in_storage i left join b_order o on o.id = i.order_id left join b_out_storage ot on ot.id = i.out_storage_id where i.is_delete = 0 ");
         if (StringUtils.isNotBlank(customerNameItem)) {
             sb.append(" and o.customer_name = :customerNameItem ");
+        }
+        if (StringUtils.isNotBlank(incomingTypeItem)) {
+            sb.append(" and i.incoming_type = :incomingTypeItem ");
         }
         if (StringUtils.isNotBlank(starttime)) {
             sb.append(" and i.create_time >= :starttime ");
@@ -79,7 +85,7 @@ public class InStorageDao {
             sb.append(" and i.code like '%" + code + "%' ");
         }
         int totleRowCount = 0;
-        SqlRow sqlRow = Ebean.createSqlQuery(sb.toString()).setParameter("customerNameItem", customerNameItem).setParameter("customer_name_item", customerNameItem).setParameter("starttime", starttime).setParameter("endtime", endtime).findOne();
+        SqlRow sqlRow = Ebean.createSqlQuery(sb.toString()).setParameter("customerNameItem", customerNameItem).setParameter("customer_name_item", customerNameItem).setParameter("starttime", starttime).setParameter("endtime", endtime).setParameter("incomingTypeItem", incomingTypeItem).findOne();
         if (sqlRow != null && !sqlRow.isEmpty()) {
             totleRowCount = sqlRow.getInteger("count");
         }
@@ -102,6 +108,7 @@ public class InStorageDao {
         sb.append("i.unit,");
         sb.append("i.incoming_type,");
         sb.append("i.incoming_reason,");
+        sb.append("i.bad_reason,");
         sb.append("i.create_time,");
         sb.append("i.modified_time,");
         sb.append("i.is_delete,");

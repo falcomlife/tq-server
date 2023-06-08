@@ -45,9 +45,9 @@ public class InStorageController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('I-1')")
-    public RS getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String code, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
-        List<SqlRow> list = this.dao.getByPage(pageIndex, pageSize, customerNameItem, code, starttime, endtime);
-        int totleRowCount = this.dao.getCountByPage(pageIndex, pageSize, customerNameItem, code, starttime, endtime);
+    public RS getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem,@RequestParam(required = false) String incomingTypeItem, @RequestParam(required = false) String code, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
+        List<SqlRow> list = this.dao.getByPage(pageIndex, pageSize, customerNameItem, incomingTypeItem, code, starttime, endtime);
+        int totleRowCount = this.dao.getCountByPage(pageIndex, pageSize, customerNameItem, incomingTypeItem, code, starttime, endtime);
         List<DictDo> customerDicts = this.dictController.getDictDoByType("customer");
         List<DictDo> colorDicts = this.dictController.getDictDoByType("color");
         List<DictDo> incomingtypeDicts = this.dictController.getDictDoByType("incomingtype");
@@ -135,6 +135,7 @@ public class InStorageController {
             aoInner.setIncomingType(incomingtypeDicts.stream().filter(dict -> dict.getId().equals(item.getString("incoming_type"))).findFirst().get().getItemName());
             aoInner.setIncomingTypeId(item.getString("incoming_type"));
             aoInner.setIncomingReason(item.getString("incoming_reason"));
+            aoInner.setBadReason(item.getString("bad_reason"));
             aoInner.setBake(ctDicts.stream().filter(dict -> dict.getId().equals(item.getString("bake"))).findFirst().get().getItemName());
             aoInner.setBakeId(item.getString("bake"));
             return aoInner;

@@ -18,3 +18,9 @@ okhttp:
 project:
   file:
     path: /opt/tq/files/images/
+logging:
+  level:
+    io:
+      ebean:
+        SQL: WARN
+        TXN: WARN

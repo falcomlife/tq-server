@@ -10,7 +10,7 @@
         <!-- 这里关闭谨慎模式，如果开启谨慎模式，可以使多个JVM中运行的多个FileAppender实例，安全的写入到同一个日志文件。 -->
         <Prudent>false</Prudent>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <FileNamePattern>logs/iot/%d{yyyy-MM-dd}.log</FileNamePattern>
+            <FileNamePattern>logs/storage/%d{yyyy-MM-dd}.log</FileNamePattern>
         </rollingPolicy>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger- %msg%n</pattern>

@@ -44,12 +44,6 @@ spring:
 ebean:
   search:
     packages: com.cotte.estate.bean.pojo.doo
-logging:
-  level:
-    io:
-      ebean:
-        SQL: DEBUG
-        TXN: DEBUG
 okhttp:
   connectTimeout: 30
   readTimeout: 30
