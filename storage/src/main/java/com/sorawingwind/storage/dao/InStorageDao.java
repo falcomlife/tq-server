@@ -30,6 +30,7 @@ public class InStorageDao {
         sb.append("i.unit,");
         sb.append("i.incoming_type,");
         sb.append("i.incoming_reason,");
+        sb.append("i.bad_reason,");
         sb.append("i.create_time,");
         sb.append("i.modified_time,");
         sb.append("i.is_delete,");

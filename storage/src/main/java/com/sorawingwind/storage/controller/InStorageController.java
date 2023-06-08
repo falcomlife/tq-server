@@ -81,6 +81,7 @@ public class InStorageController {
             aoInner.setIncomingType(incomingtypeDicts.stream().filter(dict -> dict.getId().equals(item.getString("incoming_type"))).findFirst().get().getItemName());
             aoInner.setIncomingTypeId(item.getString("incoming_type"));
             aoInner.setIncomingReason(item.getString("incoming_reason"));
+            aoInner.setBadReason(item.getString("bad_reason"));
             aoInner.setBake(ctDicts.stream().filter(dict -> dict.getId().equals(item.getString("bake"))).findFirst().get().getItemName());
             aoInner.setBakeId(item.getString("bake"));
             return aoInner;

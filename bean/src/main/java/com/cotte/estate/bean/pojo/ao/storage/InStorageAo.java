@@ -77,6 +77,8 @@ public class InStorageAo {
 
     private String incomingType;
 
+    private String badReason;
+
     private String incomingTypeId;
 
     private String incomingReason;

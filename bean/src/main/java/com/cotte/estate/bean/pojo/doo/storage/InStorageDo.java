@@ -46,6 +46,8 @@ public class InStorageDo {
     private String inCount;
     @Column(name = "color")
     private String color;
+    @Column(name = "bad_reason")
+    private String badReason;
     @Column(name = "incoming_type")
     private String incomingType;
     @Column(name = "incoming_reason")
