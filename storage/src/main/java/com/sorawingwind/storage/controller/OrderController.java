@@ -9,6 +9,7 @@ import com.cotte.estate.bean.pojo.doo.storage.DictDo;
 import com.cotte.estate.bean.pojo.doo.storage.InStorageDo;
 import com.cotte.estate.bean.pojo.doo.storage.OrderDo;
 import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
+import com.cotte.estate.bean.pojo.eto.MouthStatisticsCustomerEto;
 import com.cotte.estate.bean.pojo.eto.OrderEto;
 import com.cotte.estatecommon.PageRS;
 import com.cotte.estatecommon.RS;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
@@ -222,6 +224,39 @@ public class OrderController {
             return RS.ok(map);
         } else {
             return RS.warn("未查询到订单数据。");
+        }
+    }
+    @GetMapping("/statistics/customer/excel")
+    @PreAuthorize("hasAuthority('I-3')")
+    public void getMouthStatisticsCustomerExcel(HttpServletResponse response, @RequestParam(required = false) String time) throws ParseException, IOException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date start = sdf.parse(time);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(start);
+        calendar.add(calendar.MONTH, 1);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        Date end = calendar.getTime();
+        String startStr = sdf.format(start);
+        String endStr = sdf.format(end);
+        List<SqlRow> list = this.dao.getCountBetweenTimesWithCustomer(startStr, endStr);
+        if (!list.isEmpty()) {
+            List<DictDo> customerDicts = this.dictController.getDictDoByType("customer");
+            List<MouthStatisticsCustomerEto> listeto = list.stream().map(item -> {
+                MouthStatisticsCustomerEto mouthStatisticsCustomerEto = new MouthStatisticsCustomerEto();
+                mouthStatisticsCustomerEto.setName(customerDicts.stream().filter(dict -> dict.getId().equals(item.getString("customer_name"))).findFirst().get().getItemName());
+                mouthStatisticsCustomerEto.setCount(item.getBigDecimal("count"));
+                return mouthStatisticsCustomerEto;
+            }).collect(Collectors.toList());
+            OutputStream outputStream = response.getOutputStream();
+            // 获取模板路径
+            InputStream resourceAsStream = this.getClass().getResourceAsStream("/excel/mouthStatisticsCustomer.xlsx");
+            // 创建输出的excel对象
+            final ExcelWriter write = EasyExcel.write(outputStream).withTemplate(resourceAsStream).build();
+            // 创建第一个sheel页
+            final WriteSheet sheet1 = EasyExcel.writerSheet(0, "月客户金额明细").build();
+            write.fill(listeto, sheet1);
+            // 关闭流
+            write.finish();
         }
     }
 
