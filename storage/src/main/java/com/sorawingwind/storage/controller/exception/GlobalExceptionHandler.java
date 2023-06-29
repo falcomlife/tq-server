@@ -7,11 +7,13 @@ import com.cotte.estatecommon.exception.FeignCalldException;
 import com.cotte.estatecommon.exception.ObjectExsitException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.tomcat.util.http.fileupload.impl.FileSizeLimitExceededException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -60,9 +62,17 @@ public class GlobalExceptionHandler {
     }
 
     @ResponseBody
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public RS fileSizeException(HttpServletResponse response, MaxUploadSizeExceededException e) {
+        log.error("ERROR MESSAGE: 文件大小超过限制\n{}", ExceptionUtils.getFullStackTrace(e));
+        return RS.bad("文件大小超过512KB限制。");
+    }
+
+    @ResponseBody
     @ExceptionHandler(Exception.class)
     public RS globalException(HttpServletResponse response, Exception e) {
         log.error("ERROR MESSAGE: 未定义系统异常\n{}", ExceptionUtils.getFullStackTrace(e));
         return RS.bad("服务器处理异常。");
     }
+
 }

@@ -32,6 +32,8 @@ public class OrderAo {
 
     private String customerNameId;
 
+    private String image;
+
     private String poNum;
 
     private String item;
@@ -46,6 +48,8 @@ public class OrderAo {
 
     private Integer partSumCountCal;
 
+    private Integer outStroageGoodsSumCount;
+
     private BigDecimal outStroageSumCount;
 
     private BigDecimal price;
@@ -59,6 +63,8 @@ public class OrderAo {
     private Integer incomingCount;
 
     private BigDecimal incomingRatio;
+
+    private Boolean incomingBigger;
 
     @Temporal(TemporalType.TIMESTAMP)
     @JsonFormat(shape = JsonFormat.Shape.STRING, timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")

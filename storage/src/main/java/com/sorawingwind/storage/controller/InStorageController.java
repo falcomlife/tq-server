@@ -1,12 +1,16 @@
 package com.sorawingwind.storage.controller;
 
-import com.cotte.estate.bean.pojo.ao.storage.InStorageAo;
-import com.cotte.estate.bean.pojo.ao.storage.OrderAo;
-import com.cotte.estate.bean.pojo.ao.storage.OutStorageAo;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.write.metadata.WriteSheet;
+import com.cotte.estate.bean.pojo.ao.storage.*;
+import com.cotte.estate.bean.pojo.bo.storage.InStorageBo;
 import com.cotte.estate.bean.pojo.doo.storage.DictDo;
 import com.cotte.estate.bean.pojo.doo.storage.InStorageDo;
 import com.cotte.estate.bean.pojo.doo.storage.OrderDo;
 import com.cotte.estate.bean.pojo.doo.storage.OutStorageDo;
+import com.cotte.estate.bean.pojo.eto.InStorageEto;
+import com.cotte.estate.bean.pojo.eto.OrderEto;
 import com.cotte.estatecommon.PageRS;
 import com.cotte.estatecommon.RS;
 import com.cotte.estatecommon.enums.InUnit;
@@ -26,7 +30,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.lang.model.type.UnionType;
+import javax.servlet.http.HttpServletResponse;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -45,7 +53,7 @@ public class InStorageController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('I-1')")
-    public RS getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem,@RequestParam(required = false) String incomingTypeItem, @RequestParam(required = false) String code, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
+    public RS getByPage(@RequestParam int pageIndex, @RequestParam int pageSize, @RequestParam(required = false) String customerNameItem, @RequestParam(required = false) String incomingTypeItem, @RequestParam(required = false) String code, @RequestParam(required = false) String starttime, @RequestParam(required = false) String endtime) {
         List<SqlRow> list = this.dao.getByPage(pageIndex, pageSize, customerNameItem, incomingTypeItem, code, starttime, endtime);
         int totleRowCount = this.dao.getCountByPage(pageIndex, pageSize, customerNameItem, incomingTypeItem, code, starttime, endtime);
         List<DictDo> customerDicts = this.dictController.getDictDoByType("customer");
@@ -72,7 +80,7 @@ public class InStorageController {
             aoInner.setIsDelete(0);
             aoInner.setCustomerName(customerDicts.stream().filter(dict -> dict.getId().equals(item.getString("customer_name"))).findFirst().get().getItemName());
             aoInner.setCustomerNameId(item.getString("customer_name"));
-            if(StringUtils.isNotBlank(item.getString("color"))){
+            if (StringUtils.isNotBlank(item.getString("color"))) {
                 aoInner.setColor(colorDicts.stream().filter(dict -> dict.getId().equals(item.getString("color"))).findFirst().get().getItemName());
             }
             aoInner.setColorId(item.getString("color"));
@@ -198,7 +206,7 @@ public class InStorageController {
         calendar.add(calendar.MONTH, 1);
         calendar.set(Calendar.DAY_OF_MONTH, 1);
         Date end = calendar.getTime();
-        return RS.ok(this.dao.getMouthStatistics(start,end));
+        return RS.ok(this.dao.getMouthStatistics(start, end));
     }
 
     @GetMapping("/statistics/reratio")
@@ -211,7 +219,7 @@ public class InStorageController {
         calendar.add(calendar.MONTH, 1);
         calendar.set(Calendar.DAY_OF_MONTH, 1);
         Date end = calendar.getTime();
-        List<InStorageDo> recountList = this.dao.getMouthStatisticsReratio(start,end);
+        List<InStorageDo> recountList = this.dao.getMouthStatisticsReratio(start, end);
         BigDecimal sumcount = new BigDecimal(0);
         BigDecimal recount = new BigDecimal(0);
         for (InStorageDo doo : recountList) {
@@ -313,5 +321,37 @@ public class InStorageController {
             aoInner.setBakeId(item.getBake());
             return aoInner;
         }).collect(Collectors.toList()));
+    }
+
+    @PostMapping("/excel")
+    @PreAuthorize("hasAuthority('I-1')")
+    public void download(HttpServletResponse response, @RequestBody InStorageExcelAo inStorageExcelAo) throws Exception {
+        response.setContentType("application/vnd.ms-excel");
+        response.setCharacterEncoding("utf-8");
+        String fileName = URLEncoder.encode("入库明细", "UTF-8");
+        response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+        response.setHeader("Content-disposition", "attachment;filename=" + fileName + ".xlsx;" + "filename*=utf-8''" + fileName + ".xlsx");
+        OutputStream outputStream = response.getOutputStream();
+        //FileOutputStream outputStream = new FileOutputStream("/home/sorawingwind/桌面/xx.xlsx");
+        //String customerNameItem, String incomingTypeItem, String code, String starttime,  String endtime
+        List<DictDo> customerDicts = this.dictController.getDictDoByType("customer");
+        List<DictDo> colorDicts = this.dictController.getDictDoByType("color");
+        //获取数据
+        List<InStorageEto> listeto = this.dao.getExcels(inStorageExcelAo.getCustomerNameItem(), inStorageExcelAo.getIncomingType(), inStorageExcelAo.getCode(), inStorageExcelAo.getStarttime(), inStorageExcelAo.getEndtime());
+        listeto.stream().forEach(item ->
+            {
+                item.setCustomerName(customerDicts.stream().filter(c -> c.getId().equals(item.getCustomerName())).findFirst().get().getItemName());
+                item.setOrderColor(colorDicts.stream().filter(c -> c.getId().equals(item.getOrderColor())).findFirst().get().getItemName());
+            }
+        );
+        // 获取模板路径
+        InputStream resourceAsStream = this.getClass().getResourceAsStream("/excel/inStorage.xlsx");
+        // 创建输出的excel对象
+        final ExcelWriter write = EasyExcel.write(outputStream).withTemplate(resourceAsStream).build();
+        // 创建第一个sheel页
+        final WriteSheet sheet1 = EasyExcel.writerSheet(0, "入库明细").build();
+        write.fill(listeto, sheet1);
+        // 关闭流
+        write.finish();
     }
 }

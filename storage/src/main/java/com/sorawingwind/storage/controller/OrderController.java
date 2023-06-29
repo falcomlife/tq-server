@@ -20,6 +20,7 @@ import com.cotte.estatecommon.enums.OutType;
 import com.sorawingwind.storage.dao.OrderDao;
 import io.ebean.Ebean;
 import io.ebean.SqlRow;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -70,19 +71,37 @@ public class OrderController {
             OrderAo aoInner = new OrderAo();
             BeanUtils.copyProperties(oitem, aoInner);
             List<String> inids = listIn.stream().filter(iin -> oitem.getId().equals(iin.getOrderId())).map(InStorageDo::getId).collect(Collectors.toList());
+            // 入库反镀件组件数量，只统计单位是个的数量
             int replat = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> "5".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
+            // 入库来料异常组件数
             int incomingErr = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin -> (OutType.INSTORAGEERR.getIndex() + "").equals(oin.getOutType())).mapToInt(oin -> oin.getBunchCount().intValue()).sum();
+            // 入库非返镀件组件数量，只统计单位是个的数量（已入库组件总数）
             int inStorageSumCountCal = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> !"5".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
+            // 入库不良品组件数
+            //int incomingPoor = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin -> (OutType.POOR.getIndex() + "").equals(oin.getOutType())).mapToInt(oin -> oin.getBunchCount().intValue()).sum();
+            int incomingPoor = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> "30bc0ec552cb4a59a23c680362219ecf".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
+            // 出库良品组件数
+            int outStorageSumGood = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin->(OutType.GOOD.getIndex()+"").equals(oin.getOutType())).mapToInt(oin->oin.getBunchCount().intValue()).sum();
+            // 出库良品组件数 - 入库不良品组件数 = 已出库良品组件总数
+            outStorageSumGood = outStorageSumGood - incomingPoor;
+            // 已入库组件总数 - 入库不良品组件数 = 已入库组件总数
+            inStorageSumCountCal = inStorageSumCountCal - incomingPoor;
             if (oitem.getCount() != null && oitem.getCount().compareTo(new BigDecimal(0)) != 0) {
                 BigDecimal replatratio = new BigDecimal(replat).divide(oitem.getCount(), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
                 BigDecimal incomingErrratio = new BigDecimal(incomingErr).divide(oitem.getCount(), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
                 aoInner.setReplatRatio(replatratio);
                 aoInner.setIncomingRatio(incomingErrratio);
             }
+            if(aoInner.getPartSumCount()!=null){
+                aoInner.setIncomingBigger(aoInner.getPartSumCount().compareTo(new BigDecimal(inStorageSumCountCal)) == -1);
+            }
             aoInner.setReplatCount(replat);
             aoInner.setIncomingCount(incomingErr);
+            aoInner.setOutStroageGoodsSumCount(outStorageSumGood);
             aoInner.setPartSumCountCal(inStorageSumCountCal);
-            aoInner.setCustomerName(customerDicts.stream().filter(dict -> dict.getId().equals(oitem.getCustomerName())).findFirst().get().getItemName());
+            if(StringUtils.isNotBlank(oitem.getCustomerName())) {
+                aoInner.setCustomerName(customerDicts.stream().filter(dict -> dict.getId().equals(oitem.getCustomerName())).findFirst().get().getItemName());
+            }
             aoInner.setCustomerNameId(oitem.getCustomerName());
             aoInner.setColor(colorDicts.stream().filter(dict -> dict.getId().equals(oitem.getColor())).findFirst().get().getItemName());
             aoInner.setColorId(oitem.getColor());
@@ -177,6 +196,30 @@ public class OrderController {
                 map.put("ratio", ratio.toString());
                 return map;
             }).collect(Collectors.toList()));
+        } else {
+            return RS.warn("未查询到订单数据。");
+        }
+    }
+    @GetMapping("/statistics/customer")
+    @PreAuthorize("hasAuthority('I-3')")
+    public RS getMouthStatisticsCustomer(@RequestParam(required = false) String time) throws ParseException {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date start = sdf.parse(time);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(start);
+        calendar.add(calendar.MONTH, 1);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        Date end = calendar.getTime();
+        String startStr = sdf.format(start);
+        String endStr = sdf.format(end);
+        List<SqlRow> list = this.dao.getCountBetweenTimesWithCustomer(startStr, endStr);
+        if (!list.isEmpty()) {
+            List<String> customerNames = list.stream().map(item -> dictController.getById(item.getString("customer_name")).getItemName()).collect(Collectors.toList());
+            List<BigDecimal> counts = list.stream().map(item -> item.getBigDecimal("count")).collect(Collectors.toList());
+            Map<String,List> map = new HashMap<>();
+            map.put("name",customerNames);
+            map.put("count",counts);
+            return RS.ok(map);
         } else {
             return RS.warn("未查询到订单数据。");
         }
