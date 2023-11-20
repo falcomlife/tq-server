@@ -4,7 +4,7 @@ spring:
   main:
     allow-bean-definition-overriding: true
   application:
-    name: mall
+    name: tq
   aop:
     proxy-target-class: true
   servlet:

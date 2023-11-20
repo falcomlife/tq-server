@@ -73,30 +73,46 @@ public class OrderController {
             OrderAo aoInner = new OrderAo();
             BeanUtils.copyProperties(oitem, aoInner);
             List<String> inids = listIn.stream().filter(iin -> oitem.getId().equals(iin.getOrderId())).map(InStorageDo::getId).collect(Collectors.toList());
-            // 入库反镀件组件数量，只统计单位是个的数量
-            int replat = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> "5".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
-            // 入库来料异常组件数
-            int incomingErr = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin -> (OutType.INSTORAGEERR.getIndex() + "").equals(oin.getOutType())).mapToInt(oin -> oin.getBunchCount().intValue()).sum();
-            // 入库非返镀件组件数量，只统计单位是个的数量（已入库组件总数）
-            int inStorageSumCountCal = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> !"5".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
+
+            // 出库良品组件数
+            int outStorageSumGood = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin->(OutType.GOOD.getIndex()+"").equals(oin.getOutType())).mapToInt(oin->oin.getBunchCount().intValue()).sum();
             // 入库不良品组件数
             //int incomingPoor = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin -> (OutType.POOR.getIndex() + "").equals(oin.getOutType())).mapToInt(oin -> oin.getBunchCount().intValue()).sum();
             int incomingPoor = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> "30bc0ec552cb4a59a23c680362219ecf".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
-            // 出库良品组件数
-            int outStorageSumGood = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin->(OutType.GOOD.getIndex()+"").equals(oin.getOutType())).mapToInt(oin->oin.getBunchCount().intValue()).sum();
-            // 出库良品组件数 - 入库不良品组件数 = 已出库良品组件总数
+            // 已出库良品组件总数 = 出库良品组件数 - 入库不良品组件数
             outStorageSumGood = outStorageSumGood - incomingPoor;
-            // 已入库组件总数 - 入库不良品组件数 = 已入库组件总数
-            inStorageSumCountCal = inStorageSumCountCal - incomingPoor;
-            if (oitem.getCount() != null && oitem.getCount().compareTo(new BigDecimal(0)) != 0) {
-                BigDecimal replatratio = new BigDecimal(replat).divide(oitem.getCount(), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
-                BigDecimal incomingErrratio = new BigDecimal(incomingErr).divide(oitem.getCount(), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+            if(aoInner.getPartSumCount()!=null){
+                // 已出库良品组件总数 > 订单组件总数,已出库良品组件总数显示红色
+                aoInner.setOutStorageBigger(aoInner.getPartSumCount().compareTo(new BigDecimal(outStorageSumGood)) == -1);
+            }
+
+
+            // 入库新件，只统计单位是个的数量
+            int inStorageNew = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> "4".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
+            // 入库返镀件，只统计单位是个的数量
+            int inStorageReplat = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> "5".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
+            // 已入库组件总数 = 入库新件 + 入库返镀件
+            int inStorageSumCountCal = inStorageNew + inStorageReplat;
+            if(aoInner.getPartSumCount()!=null){
+                // 已入库组件总数 > 订单组件总数，已入库组件总数显示红色
+                aoInner.setIncomingBigger(aoInner.getPartSumCount().compareTo(new BigDecimal(inStorageSumCountCal)) == -1);
+            }
+
+
+            // 入库返镀件组件数量，只统计单位是个的数量
+            int replat = listIn.stream().filter(iin -> inids.contains(iin.getId())).filter(iin -> "5".equals(iin.getIncomingType())).filter(iin -> (InUnit.ONE.getIndex() + "").equals(iin.getUnit())).mapToInt(iin -> iin.getBunchCount().intValue()).sum();
+            // 入库来料异常组件数
+            int incomingErr = listOut.stream().filter(oin -> inids.contains(oin.getInStorageId())).filter(oin -> (OutType.INSTORAGEERR.getIndex() + "").equals(oin.getOutType())).mapToInt(oin -> oin.getBunchCount().intValue()).sum();
+            if (oitem.getPartSumCount() != null && oitem.getPartSumCount().compareTo(new BigDecimal(0)) != 0) {
+                // 返镀比率 = 入库返镀件组件数/订单组件总数×100%，蓝色显示
+                BigDecimal replatratio = new BigDecimal(replat).divide(oitem.getPartSumCount(), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
+                // 来料异常比率 = 入库来料异常组件数/订单组件总数×100%，蓝色显示
+                BigDecimal incomingErrratio = new BigDecimal(incomingErr).divide(oitem.getPartSumCount(), 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
                 aoInner.setReplatRatio(replatratio);
                 aoInner.setIncomingRatio(incomingErrratio);
             }
-            if(aoInner.getPartSumCount()!=null){
-                aoInner.setIncomingBigger(aoInner.getPartSumCount().compareTo(new BigDecimal(inStorageSumCountCal)) == -1);
-            }
+
+
             aoInner.setReplatCount(replat);
             aoInner.setIncomingCount(incomingErr);
             aoInner.setOutStroageGoodsSumCount(outStorageSumGood);
