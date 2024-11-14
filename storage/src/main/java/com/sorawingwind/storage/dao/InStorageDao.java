@@ -156,7 +156,7 @@ public class InStorageDao {
     }
 
     public List<InStorageDo> getByCode(String code) {
-        return Ebean.createQuery(InStorageDo.class).where().like("code", "%" + code + "%").eq("is_delete", false).findList();
+        return Ebean.createQuery(InStorageDo.class).where().eq("code", code).eq("is_delete", false).findList();
     }
 
     public InStorageDo getById(String id) {

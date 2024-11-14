@@ -122,7 +122,7 @@ public class OutStorageDao {
         sb.append(" left join `b_order` o on o.id = i.order_id");
         sb.append("  where ot.is_delete = 0  ");
         if (StringUtils.isNotBlank(code)) {
-            sb.append(" and ot.code like '%" + code + "%' ");
+            sb.append(" and ot.code = '" + code + "' ");
         }
         if (StringUtils.isNotBlank(orderId)) {
             sb.append(" and o.id = '" + orderId + "' ");

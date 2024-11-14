@@ -103,7 +103,7 @@ public class OrderDao {
     }
 
     public List<OrderDo> getByCode(String code) {
-        return Ebean.createQuery(OrderDo.class).where().like("code", "%" + code + "%").eq("is_delete", false).findList();
+        return Ebean.createQuery(OrderDo.class).where().eq("code", code).eq("is_delete", false).findList();
     }
 
     public List<OrderDo> getExcels(String customerNameItem, String code, String po, String item, String starttime, String endtime) {
